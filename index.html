@@ -1,22 +1,30 @@
 <!-- โค้ด HTML + Bootstrap 5 + JavaScript: index.html (พร้อม Slip Verification และบันทึกการชำระเงิน) -->
 <!DOCTYPE html>
 <html>
-<head>
-    <base target="_top">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="UTF-8">
-    <title>ระบบจองโต๊ะงานเลี้ยง</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Google Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=K2D:wght@400;700&display=swap" rel="stylesheet">
-    <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.1/dist/sweetalert2.min.css">
-    <!-- SweetAlert2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    <style>
+    <head>
+        <base target="_top">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
+        <title>ระบบจองโต๊ะงานเลี้ยง</title>
+        <!-- Bootstrap 5 CSS -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+            crossorigin="anonymous">
+        <!-- Google Font -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=K2D:wght@400;700&display=swap"
+            rel="stylesheet">
+        <!-- SweetAlert2 CSS -->
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.1/dist/sweetalert2.min.css">
+        <!-- SweetAlert2 JS -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+        <style>
         body {
             font-family: 'K2D', sans-serif;
             background-color: #a9d6f5; /* สีฟ้าสดเป็นสีพื้นหลังสำรอง */
@@ -38,6 +46,11 @@
         }
         .header-banner .sub-heading {
             font-size: 1.25rem;
+            color: #555;
+            font-weight: 400;
+            margin-top: 0.5rem;
+        }
+        .sub-footer {
             color: #555;
             font-weight: 400;
             margin-top: 0.5rem;
@@ -73,7 +86,6 @@
             /* Always 20 columns, as requested */
             grid-template-columns: repeat(20, 1fr);
             gap: 4px; /* Smaller gap for a tighter grid */
-            margin-top: 2rem;
             padding: 1rem;
             border-radius: 15px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
@@ -184,6 +196,24 @@
         .spinner-border { width: 1.5rem; height: 1.5rem; }
         #slipPreview { max-width: 100%; height: auto; border-radius: 0.5rem; margin-top: 1rem; }
 
+        .legend-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        .legend-dot.available {
+            background-color: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        .legend-dot.pending {
+            background-color: #ffc107;
+            border: 1px solid #e0a800;
+        }
+        .legend-dot.reserved {
+            background-color: #dc3545;
+            border: 1px solid #b02a37;
+        }
+
         /* Media queries for minor adjustments */
         @media (max-width: 768px) {
        
@@ -205,11 +235,8 @@
             font-weight: 400;
             margin-top: 0.5rem;
         }
-        .sub-footer {
+        .footer {
             font-size: 0.8rem;
-            color: #555;
-            font-weight: 400;
-            margin-top: 0.5rem;
         }
         }
 
@@ -230,127 +257,201 @@
                 width: 200px;
                 margin: -50px 0px;
             }
+            .footer {
+                font-size: 0.75rem;
+            }
+            .sub-footer {
+                font-size: 0.8rem;
+            }
+            .legend-dot {
+                width: 15px;
+                height: 15px;
+            }
 
         }
     </style>
-</head>
-<body>
-    <header class="header-banner">
-        <h1>ระบบจองโต๊ะงานเลี้ยง</h1>
-        <p class="sub-heading">
-            ร้อยดวงใจแห่งรัก คืนสู่เหย้า ชาว จ.ป. ❤️ จ.ว. ❤️ ส.ก.จ. <br> 51 ปี แห่งความภาคภูมิใจ<br>
-             ณ สนามฟุตบอล โรงเรียนสวนกุหลาบวิทยาลัย (จิรประวัติ) นครสวรรค์
-        </p>
-    </header>
-    <div class="container-fluid">
-        <div class="stage-container">
-            <div class="stage-backdrop"></div>
-            <img id="stageImage" src="stage.png" alt="เวทีคอนเสิร์ต" class="img-fluid" >
-        </div>
+    </head>
+    <body>
+        <header class="header-banner">
+            <h1>ระบบจองโต๊ะงานเลี้ยง</h1>
+            <p class="sub-heading">
+                ร้อยดวงใจแห่งรัก คืนสู่เหย้า ชาว จ.ป. ❤️ จ.ว. ❤️ ส.ก.จ. <br> 51
+                ปี แห่งความภาคภูมิใจ<br>
+                ณ สนามฟุตบอล โรงเรียนสวนกุหลาบวิทยาลัย (จิรประวัติ) นครสวรรค์
+            </p>
+        </header>
+        <div class="container-fluid">
+            <div class="stage-container">
+                <div class="stage-backdrop"></div>
+                <img id="stageImage" src="stage.png" alt="เวทีคอนเสิร์ต"
+                    class="img-fluid">
 
-        <!-- ส่วนสำหรับแสดงแผนผังโต๊ะ -->
-         
-        <div class="table-layout-grid" id="tableLayout">
+            </div>
             
-            <!-- ตารางจะถูกสร้างขึ้นมาที่นี่ด้วย JavaScript -->
-        </div>
-       <div class="text-center sub-footer"> กรุณาเลือกโต๊ะที่ต้องการจอง ที่อยู่ในสนามบอล โดยคลิกที่โต๊ะนั้น ๆ</div><br>
-    </div>
+            <!-- ส่วนสำหรับแสดงแผนผังโต๊ะ -->
 
-    <!-- Modal สำหรับแบบฟอร์มการจอง -->
-    <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="reservationModalLabel">จองโต๊ะ</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="table-layout-grid" id="tableLayout">
+
+                <!-- ตารางจะถูกสร้างขึ้นมาที่นี่ด้วย JavaScript -->
+            </div>
+<div
+                class="d-flex justify-content-center justify-content-lg-end align-items-center mt-4 gap-4 sub-footer">
+                <div class="d-flex align-items-center">
+                    <div class="legend-dot available"></div>
+                    <span class="ms-2">ว่าง</span>
                 </div>
-                <div class="modal-body">
-                    <form id="reservationForm">
-                        <input type="hidden" id="tableIdInput" name="tableId">
-                        <div class="mb-3">
-                            <label for="tableNameDisplay" class="form-label">โต๊ะที่</label>
-                            <input type="text" class="form-control" id="tableNameDisplay" name="tableNameDisplay" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="nameInput" class="form-label">ชื่อ</label>
-                            <input type="text" class="form-control" id="nameInput" name="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="lastNameInput" class="form-label">นามสกุล</label>
-                            <input type="text" class="form-control" id="lastNameInput" name="lastName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="phoneInput" class="form-label">เบอร์โทรศัพท์</label>
-                            <input type="tel" class="form-control" id="phoneInput" name="phone" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="batchInput" class="form-label">ชื่อรุ่น</label>
-                            <input type="text" class="form-control" id="batchInput" name="batch" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="gradYearInput" class="form-label">ปี พ.ศ. ที่จบ</label>
-                            <input type="number" class="form-control" id="gradYearInput" name="gradYear" placeholder="ตัวอย่าง: 2540" required>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                            <button type="submit" class="btn btn-success" id="submitBtn">ยืนยันการจอง</button>
-                        </div>
-                    </form>
+                <div class="d-flex align-items-center">
+                    <div class="legend-dot pending"></div>
+                    <span class="ms-2">รอตรวจสอบ</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="legend-dot reserved"></div>
+                    <span class="ms-2">จองแล้ว</span>
+                </div>
+            </div>
+            <div class="text-center sub-footer"> กรุณาเลือกโต๊ะที่ต้องการจอง
+                ที่อยู่ในสนามบอล โดยคลิกที่โต๊ะนั้น ๆ</div><br>
+        </div>
+
+        <!-- Modal สำหรับแบบฟอร์มการจอง -->
+        <div class="modal fade" id="reservationModal" tabindex="-1"
+            aria-labelledby="reservationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"
+                            id="reservationModalLabel">จองโต๊ะ</h5>
+                        <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="reservationForm">
+                            <input type="hidden" id="tableIdInput"
+                                name="tableId">
+                            <div class="mb-3">
+                                <label for="tableNameDisplay"
+                                    class="form-label">โต๊ะที่</label>
+                                <input type="text" class="form-control"
+                                    id="tableNameDisplay"
+                                    name="tableNameDisplay" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="nameInput"
+                                    class="form-label">ชื่อ</label>
+                                <input type="text" class="form-control"
+                                    id="nameInput" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="lastNameInput"
+                                    class="form-label">นามสกุล</label>
+                                <input type="text" class="form-control"
+                                    id="lastNameInput" name="lastName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phoneInput"
+                                    class="form-label">เบอร์โทรศัพท์</label>
+                                <input type="tel" class="form-control"
+                                    id="phoneInput" name="phone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="batchInput"
+                                    class="form-label">ชื่อรุ่น</label>
+                                <input type="text" class="form-control"
+                                    id="batchInput" name="batch" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="gradYearInput" class="form-label">ปี
+                                    พ.ศ. ที่จบ</label>
+                                <input type="number" class="form-control"
+                                    id="gradYearInput" name="gradYear"
+                                    placeholder="ตัวอย่าง: 2540" required>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">ยกเลิก</button>
+                                <button type="submit" class="btn btn-success"
+                                    id="submitBtn">ยืนยันการจอง</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal สำหรับแสดงการอัปโหลดสลิป -->
-    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="paymentModalLabel">ชำระเงินค่าจองโต๊ะ</h5>
-                </div>
-                <div class="modal-body text-center">
-                    <p class="mb-3">กรุณาโอนเงิน 3,600.00 บาท เข้าบัญชี<br><strong>ธนาคาร A เลขที่บัญชี xxx-x-x8891-x</strong><br>และอัปโหลดสลิปเพื่อยืนยันการจอง</p>
-                    
-                    <div class="mb-3">
-                        <label for="paymentAmount" class="form-label">จำนวนเงินที่โอน (บาท)</label>
-                        <input type="number" class="form-control" id="paymentAmount" name="paymentAmount" step="0.01" required>
+        <!-- Modal สำหรับแสดงการอัปโหลดสลิป -->
+        <div class="modal fade" id="paymentModal" tabindex="-1"
+            aria-labelledby="paymentModalLabel" aria-hidden="true"
+            data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"
+                            id="paymentModalLabel">ชำระเงินค่าจองโต๊ะ</h5>
                     </div>
-                    <div class="mb-3">
-                        <label for="transferDate" class="form-label">วันที่โอน</label>
-                        <input type="date" class="form-control" id="transferDate" name="transferDate" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="transferTime" class="form-label">เวลาที่โอน</label>
-                        <input type="time" class="form-control" id="transferTime" name="transferTime" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="slipUpload" class="form-label">อัปโหลดสลิปการโอนเงิน</label>
-                        <input class="form-control" type="file" id="slipUpload" name="slipUpload" accept="image/*" required>
-                        <img id="slipPreview" src="#" alt="ตัวอย่างสลิป" style="display:none; max-width: 100%; height: auto; border-radius: 0.5rem; margin-top: 1rem;">
-                    </div>
+                    <div class="modal-body text-center">
+                        <p class="mb-3">กรุณาโอนเงิน 3,600.00 บาท
+                            เข้าบัญชี<br><strong>ธนาคาร กสิกรไทย เลขที่บัญชี
+                                007-1-38891-3
+                                <br> ชื่อบัญชี นายมานิต โลหะวณิชย์
+                            </strong><br>และอัปโหลดสลิปเพื่อยืนยันการจอง</p>
 
-                    <div class="payment-status mt-3">
-                        <div id="loadingSpinner" class="spinner-border text-primary" role="status" style="display:none;">
-                            <span class="visually-hidden">Loading...</span>
+                        <div class="mb-3">
+                            <label for="paymentAmount"
+                                class="form-label">จำนวนเงินที่โอน (บาท)</label>
+                            <input type="number" class="form-control"
+                                id="paymentAmount" name="paymentAmount"
+                                step="0.01" required>
                         </div>
-                        <span id="paymentStatusText" class="ms-2 text-primary fw-bold"></span>
+                        <div class="mb-3">
+                            <label for="transferDate"
+                                class="form-label">วันที่โอน</label>
+                            <input type="date" class="form-control"
+                                id="transferDate" name="transferDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transferTime"
+                                class="form-label">เวลาที่โอน</label>
+                            <input type="time" class="form-control"
+                                id="transferTime" name="transferTime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="slipUpload"
+                                class="form-label">อัปโหลดสลิปการโอนเงิน</label>
+                            <input class="form-control" type="file"
+                                id="slipUpload" name="slipUpload"
+                                accept="image/*" required>
+                            <img id="slipPreview" src="#" alt="ตัวอย่างสลิป"
+                                style="display:none; max-width: 100%; height: auto; border-radius: 0.5rem; margin-top: 1rem;">
+                        </div>
+
+                        <div class="payment-status mt-3">
+                            <div id="loadingSpinner"
+                                class="spinner-border text-primary"
+                                role="status" style="display:none;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span id="paymentStatusText"
+                                class="ms-2 text-primary fw-bold"></span>
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-outline-danger" id="cancelPaymentBtn">ยกเลิก</button>
-                    <button type="button" class="btn btn-success" id="verifySlipBtn" disabled>ยืนยันการชำระเงิน</button>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-outline-danger"
+                            id="cancelPaymentBtn">ยกเลิก</button>
+                        <button type="button" class="btn btn-success"
+                            id="verifySlipBtn"
+                            disabled>ยืนยันการชำระเงิน</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    
+        <!-- Bootstrap 5 JS -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
 
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    
-    <script>
+        <script>
         // --- GLOBAL STATE ---
         let allReservations = [];
         let tempReservationData = null; // To hold form data between reservation and payment steps
@@ -385,10 +486,10 @@
             if (isSuccess) {
                 console.log(`Success: ${message}`);
             } else {
-                console.error(`Error: ${message}`, errorDetails || '');
+                console.error(`Error_s: ${message}`, errorDetails || '');
             }
 
-            Swal.fire({
+            return Swal.fire({
                 title: title,
                 html: message, // Use html to allow for line breaks
                 icon: isSuccess ? 'success' : 'error',
@@ -403,7 +504,6 @@
             tableLayout.innerHTML = '';
             tableLayout.style.display = 'grid';
             tableLayout.style.gridTemplateColumns = 'repeat(20, 1fr)';
-            tableLayout.style.marginTop = '2rem';
             config.forEach(section => {
                 for (let i = 0; i < section.rows; i++) {
                     for (let j = 0; j < section.cols; j++) {
@@ -561,8 +661,8 @@
 
                 // Success!
                 paymentModal.hide();
-                showMessage(`จองโต๊ะ ${tempReservationData.tableId} สำเร็จ!`);
-                loadData(); // Refresh table data
+                await showMessage(`จองโต๊ะ ${tempReservationData.tableId} สำเร็จแล้ว!<br>รอผู้ดูแลตรวจสอบและอนุมัติการจองครับ`);
+                fetchAndUpdate(); // Refresh table data
 
             } catch (error) {
                 // Pass the specific error message from the server directly.
@@ -578,8 +678,31 @@
             }
         }
         
-        // --- INITIAL DATA LOAD ---
-        async function loadData() {
+        // --- INITIAL DATA LOAD & POLLING ---
+
+        // Function for silent background updates
+        async function fetchAndUpdate() {
+            try {
+                const response = await fetch(API_GET_RESERVATIONS);
+                if (!response.ok) {
+                    console.error('Polling Error: Could not connect to the server.');
+                    return; // Fail silently
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    allReservations = Array.isArray(result.data) ? result.data : [];
+                    updateTableStatus();
+                } else {
+                    console.error('Polling Error:', result.message || 'Failed to load data.');
+                }
+            } catch (error) {
+                console.error('Polling Error:', error.message);
+            }
+        }
+
+        // Function for the first page load with a loading indicator
+        async function initialLoad() {
             Swal.fire({
                 title: 'กำลังโหลดข้อมูลโต๊ะ...',
                 allowOutsideClick: false,
@@ -588,6 +711,8 @@
 
             try {
                 createTableLayout(layoutConfig); // Create layout first
+                
+                // Perform the first fetch and show errors to the user
                 const response = await fetch(API_GET_RESERVATIONS);
                 if (!response.ok) throw new Error('Could not connect to the server.');
                 
@@ -595,6 +720,10 @@
                 if (result.success) {
                     allReservations = Array.isArray(result.data) ? result.data : [];
                     updateTableStatus();
+                    
+                    // If initial load is successful, start polling
+                    setInterval(fetchAndUpdate, 30000); // Poll every 30 seconds
+
                 } else {
                     throw new Error(result.message || 'Failed to load data.');
                 }
@@ -606,7 +735,7 @@
         }
 
         // --- EVENT LISTENERS ---
-        window.onload = loadData;
+        window.onload = initialLoad;
         reservationForm.addEventListener('submit', submitReservationDetails);
         verifySlipBtn.addEventListener('click', handleSlipVerification);
 
@@ -640,10 +769,11 @@
         });
 
     </script>
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">สำหรับผู้ดูแลระบบ: <a href="admin.php" class="btn btn-sm btn-outline-primary">จัดการการจอง</a></span>
-        </div>
-    </footer>
-</body>
+        <footer class="footer mt-auto py-3 bg-light">
+            <div class="container text-center">
+                <span class="text-muted">สำหรับผู้ดูแลระบบ: <a href="admin.php"
+                        class="btn btn-sm btn-outline-primary">จัดการการจอง</a></span>
+            </div>
+        </footer>
+    </body>
 </html>
