@@ -24,6 +24,8 @@
         <!-- SweetAlert2 JS -->
         <script
             src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+        <!-- Tesseract.js for OCR -->
+        <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
         <style>
         body {
             font-family: 'K2D', sans-serif;
@@ -355,9 +357,9 @@
                             </div>
                             <div class="mb-3">
                                 <label for="batchInput"
-                                    class="form-label">ชื่อรุ่น</label>
+                                    class="form-label">ชื่อรุ่น </label>
                                 <input type="text" class="form-control"
-                                    id="batchInput" name="batch" required>
+                                    id="batchInput" name="batch">
                             </div>
                             <div class="mb-3">
                                 <label for="gradYearInput" class="form-label">ปี
@@ -734,21 +736,80 @@
             }
         }
 
+        // --- SLIP VERIFICATION (OCR) ---
+        async function verifySlipImage(file) {
+            paymentStatusText.textContent = 'กำลังตรวจสอบสลิป...';
+            verifySlipBtn.disabled = true;
+            loadingSpinner.style.display = 'block';
+
+            try {
+                const { data: { text } } = await Tesseract.recognize(
+                    file,
+                    'tha+eng',
+                    { logger: m => { if(m.status === 'recognizing text') { 
+                        paymentStatusText.textContent = `กำลังวิเคราะห์... ${(m.progress * 100).toFixed(0)}%`;
+                     } } }
+                );
+
+                console.log("OCR Result:", text);
+
+                const keywords = ['โอนเงิน', 'สำเร็จ', 'ref', 'amount', 'จำนวนเงิน', 'สลิป', 'กสิกรไทย', 'kbank', 'scb', 'ktb', 'bbl', 'bay', 'ttb', 'promptpay', 'พร้อมเพย์'];
+                const textLower = text.toLowerCase();
+                const foundKeywords = keywords.filter(kw => textLower.includes(kw.toLowerCase()));
+                
+                const hasNumbers = /\d{4,}/.test(text);
+
+                if (foundKeywords.length > 0 && hasNumbers) {
+                    paymentStatusText.innerHTML = 'ตรวจสอบสลิปเบื้องต้นแล้ว <span style="color: green;">✔</span>';
+                    verifySlipBtn.disabled = false;
+                } else {
+                    paymentStatusText.innerHTML = '⚠️ ไม่ใช่สลิปโอนเงิน โปรดอัปโหลดใหม่';
+                    verifySlipBtn.disabled = true; 
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ไฟล์ไม่ถูกต้อง',
+                        html: 'ระบบไม่พบข้อมูลที่บ่งชี้ว่าเป็นสลิปโอนเงิน<br>กรุณาอัปโหลดไฟล์สลิปที่ถูกต้องเพื่อดำเนินการต่อ',
+                        confirmButtonText: 'ตกลง'
+                    });
+                }
+            } catch (error) {
+                console.error("OCR Error:", error);
+                paymentStatusText.textContent = 'เกิดข้อผิดพลาดในการตรวจสอบสลิป';
+                verifySlipBtn.disabled = false;
+            } finally {
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
         // --- EVENT LISTENERS ---
         window.onload = initialLoad;
         reservationForm.addEventListener('submit', submitReservationDetails);
         verifySlipBtn.addEventListener('click', handleSlipVerification);
 
-        slipUpload.addEventListener('change', (event) => {
+        slipUpload.addEventListener('change', async (event) => {
             const file = event.target.files[0];
             if (file) {
+                // Basic file type check before OCR
+                if (!file.type.startsWith('image/')) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ไฟล์ไม่ถูกต้อง',
+                        text: 'กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, etc.)'
+                    });
+                    slipUpload.value = ''; // Reset file input
+                    return;
+                }
+
                 slipPreview.src = URL.createObjectURL(file);
                 slipPreview.style.display = 'block';
-                verifySlipBtn.disabled = false;
-                paymentStatusText.textContent = 'พร้อมสำหรับยืนยัน';
+                verifySlipBtn.disabled = true; // Disable until check is complete
+                
+                await verifySlipImage(file);
+
             } else {
                 slipPreview.style.display = 'none';
                 verifySlipBtn.disabled = true;
+                paymentStatusText.textContent = '';
             }
         });
         
