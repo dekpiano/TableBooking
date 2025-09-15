@@ -1,83 +1,75 @@
 <!-- โค้ด HTML + Bootstrap 5 + JavaScript: index.html (พร้อม Slip Verification และบันทึกการชำระเงิน) -->
 <!DOCTYPE html>
 <html>
-
-<head>
-    <base target="_top">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="UTF-8">
-    <title>ระบบจองโต๊ะงานเลี้ยง</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Google Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=K2D:wght@400;700&display=swap" rel="stylesheet">
-    <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.1/dist/sweetalert2.min.css">
-    <!-- SweetAlert2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    <!-- Tesseract.js for OCR -->
-    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
-    <style>
+    <head>
+        <base target="_top">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
+        <title>ระบบจองโต๊ะงานเลี้ยง</title>
+        <!-- Bootstrap 5 CSS -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+            crossorigin="anonymous">
+        <!-- Google Font -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=K2D:wght@400;700&display=swap"
+            rel="stylesheet">
+        <!-- SweetAlert2 CSS -->
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.1/dist/sweetalert2.min.css">
+        <!-- SweetAlert2 JS -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+        <!-- Tesseract.js for OCR -->
+        <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+        <style>
         body {
             font-family: 'K2D', sans-serif;
-            background-color: #a9d6f5;
-            /* สีฟ้าสดเป็นสีพื้นหลังสำรอง */
-            background-image: linear-gradient(to top right, #f8b4c8, #a9d6f5);
-            /* ไล่เฉดสีชมพูไปฟ้า (สดขึ้น 30%) */
-            color: #212529;
-            /* สีตัวอักษรหลักเป็นสีเข้ม */
+            background-color: #a9d6f5; /* สีฟ้าสดเป็นสีพื้นหลังสำรอง */
+            background-image: linear-gradient(to top right, #f8b4c8, #a9d6f5); /* ไล่เฉดสีชมพูไปฟ้า (สดขึ้น 30%) */
+            color: #212529; /* สีตัวอักษรหลักเป็นสีเข้ม */
         }
-
         .header-banner {
             padding: 1.5rem 0.5rem;
-            margin-bottom: 2rem;
-            background-color: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.8);
-            text-align: center;
+    margin-bottom: 2rem;
+    background-color: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+    text-align: center;
         }
-
         .header-banner h1 {
             font-weight: 700;
             color: #333;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-
         .header-banner .sub-heading {
             font-size: 1.25rem;
             color: #555;
             font-weight: 400;
             margin-top: 0.5rem;
         }
-
         .sub-footer {
             color: #555;
             font-weight: 400;
             margin-top: 0.5rem;
         }
-
         h1 {
-            color: #0d6efd;
-            /* ทำให้หัวข้อเป็นสีน้ำเงินหลักของ Bootstrap */
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-            /* เพิ่มเงาจางๆ ให้ดูมีมิติ */
+            color: #0d6efd; /* ทำให้หัวข้อเป็นสีน้ำเงินหลักของ Bootstrap */
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1); /* เพิ่มเงาจางๆ ให้ดูมีมิติ */
         }
-
         .container-fluid {
-            padding: 1rem;
-            /* Reduced padding to give more space to the grid */
+            padding: 1rem; /* Reduced padding to give more space to the grid */
             max-width: 1600px;
         }
-
         .stage-container {
             position: relative;
             text-align: center;
             margin-bottom: 2rem;
         }
-
         #stageImage {
             width: 400px;
             max-width: 100%;
@@ -86,17 +78,16 @@
             position: relative;
             z-index: 1;
             border-radius: 10px;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
         }
-
+        
         #tableLayout {
             position: relative;
             z-index: 1;
             padding: 1rem;
             border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-            /* Important to contain the blurred pseudo-element */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            overflow: hidden; /* Important to contain the blurred pseudo-element */
         }
 
         .table-grid-section {
@@ -111,30 +102,18 @@
         }
 
         .walkway-row {
-
-            padding: 7px 0;
+            text-align: center;
+            padding: 0px 0;
             margin: 8px 0;
             background-color: rgba(0, 0, 0, 0.2);
             color: white;
             font-weight: bold;
             border-radius: 4px;
-            font-size: 16px;
-            padding-left: 300px;
         }
 
         .walkway-column {
             position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            white-space: nowrap;
-            font-size: 16px;
         }
-
         .walkway-column::before {
             content: '';
             position: absolute;
@@ -143,7 +122,6 @@
             left: 0;
             right: 0;
             background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
         }
 
         #tableLayout::before {
@@ -158,8 +136,7 @@
             background-size: cover;
             background-position: center;
             filter: blur(3px);
-            transform: scale(1.1);
-            /* Scale to avoid blurred edges */
+            transform: scale(1.1); /* Scale to avoid blurred edges */
         }
 
         .table-item {
@@ -169,9 +146,8 @@
             height: 0;
             border-radius: 50%;
             position: relative;
-
-            background: rgba(255, 255, 255, 0.5);
-            /* Made slightly more transparent */
+            
+            background: rgba(255, 255, 255, 0.5); /* Made slightly more transparent */
             border: 1px solid rgba(255, 255, 255, 0.7);
             box-sizing: border-box;
             cursor: pointer;
@@ -179,81 +155,64 @@
             /* backdrop-filter removed */
         }
 
-        .table-item span {
-            /* The container for the table name */
+        .table-item span { /* The container for the table name */
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             color: #000000;
             font-weight: 700;
-            font-size: 75%;
-            /* Font size is relative to the parent circle's width */
+            font-size: 75%; /* Font size is relative to the parent circle's width */
             text-align: center;
             width: 100%;
-            text-shadow: 0 0 4px white;
-            /* White glow for readability */
+            text-shadow: 0 0 4px white; /* White glow for readability */
         }
 
         .table-item:hover {
             transform: scale(1.1);
             border-color: #ffffff;
             background: rgba(255, 255, 255, 0.8);
-            z-index: 2;
-            /* Bring to front on hover */
+            z-index: 2; /* Bring to front on hover */
         }
 
-
+        .table-item.square-table {
+            border-radius: 8px;
+        }
 
         .table-item.reserved {
-            background-color: #dc3545 !important;
-            /* Red color for reserved */
-            border-color: #b02a37;
-            /* Darker red for border */
+            background-color: #dc3545 !important; /* Red color for reserved */
+            border-color: #b02a37; /* Darker red for border */
             cursor: not-allowed;
         }
-
         .table-item.reserved span {
             color: white;
             text-shadow: none;
         }
-
         .table-item.reserved:hover {
             transform: none;
-            background-color: #dc3545;
-            /* Ensure hover doesn't change background */
+            background-color: #dc3545; /* Ensure hover doesn't change background */
         }
 
         .table-item.pending {
-            background-color: #ffc107 !important;
-            /* Orange color for pending */
-            border-color: #e0a800;
-            /* Darker orange for border */
-            cursor: pointer;
-            /* ยังสามารถคลิกได้ */
+            background-color: #ffc107 !important; /* Orange color for pending */
+            border-color: #e0a800; /* Darker orange for border */
+            cursor: pointer; /* ยังสามารถคลิกได้ */
         }
-
         .table-item.pending span {
-            color: black !important;
-            /* ข้อความสีดำ */
+            color: black !important; /* ข้อความสีดำ */
             text-shadow: none !important;
         }
-
         .table-item.pending:hover {
             transform: scale(1.1);
-            background-color: #ffcd39 !important;
-            /* สีส้มอ่อนลงเมื่อ hover */
+            background-color: #ffcd39 !important; /* สีส้มอ่อนลงเมื่อ hover */
         }
 
         .reserved-label {
-            display: none;
-            /* Hide the reserved label */
             position: absolute;
             bottom: 5%;
             left: 0;
             right: 0;
-            font-size: 35%;
-            /* Relative font size */
+            font-size: 35%; /* Relative font size */
             font-weight: 400;
             opacity: 0.9;
             overflow: hidden;
@@ -266,288 +225,113 @@
         /* This rule is no longer needed as body text is dark again */
 
         /* Other styles for modals etc. remain the same */
-        .stage-backdrop {
-            display: none;
-        }
-
-        /* Hide backdrop as it does not add much value now */
-        .modal-footer {
-            justify-content: center;
-        }
-
-        .payment-status {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .spinner-border {
-            width: 1.5rem;
-            height: 1.5rem;
-        }
-
-        #slipPreview {
-            max-width: 100%;
-            height: auto;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
-        }
+        .stage-backdrop { display:none; } /* Hide backdrop as it does not add much value now */
+        .modal-footer { justify-content: center; }
+        
+        .payment-status { display: flex; align-items: center; justify-content: center; }
+        .spinner-border { width: 1.5rem; height: 1.5rem; }
+        #slipPreview { max-width: 100%; height: auto; border-radius: 0.5rem; margin-top: 1rem; }
 
         .legend-dot {
             width: 20px;
             height: 20px;
             border-radius: 50%;
         }
-
-        .table-note {
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 8px 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            font-weight: bold;
-            color: #333;
-            white-space: nowrap;
-        }
-
-        .notes-group {
-            display: flex;
-            gap: 1rem;
-            margin-right: auto;
-            margin-left: 1rem;
-        }
-
         .legend-dot.available {
             background-color: rgba(255, 255, 255, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.7);
         }
-
         .legend-dot.pending {
             background-color: #ffc107;
             border: 1px solid #e0a800;
         }
-
         .legend-dot.reserved {
             background-color: #dc3545;
             border: 1px solid #b02a37;
         }
 
-         .table-item.square-table {
-            border-radius: 8px;
-            margin-top: -45px;
-        }
-
-        .table-item.square-table1 {
-            border-radius: 1px;
-        }
-
         /* Media queries for minor adjustments */
         @media (max-width: 768px) {
-
-            .table-item span {
-                /* The container for the table name */
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                color: #000000;
-                font-weight: 700;
-                font-size: 50%;
-                /* Font size is relative to the parent circle's width */
-                text-align: center;
-                width: 100%;
-                text-shadow: 0 0 4px white;
-                /* White glow for readability */
-            }
-
-            .header-banner .sub-heading {
-                font-size: 0.8rem;
-                color: #555;
-                font-weight: 400;
-                margin-top: 0.5rem;
-            }
-
-            .footer {
-                font-size: 0.8rem;
-            }
+       
+            .table-item span { /* The container for the table name */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000000;
+            font-weight: 700;
+            font-size: 50%; /* Font size is relative to the parent circle's width */
+            text-align: center;
+            width: 100%;
+            text-shadow: 0 0 4px white; /* White glow for readability */
         }
-
-        @media (max-width: 768px) {
-            .sub-footer {
-                flex-direction: column;
-                align-items: center;
-                /* Center items horizontally when stacked */
-            }
-
-            .notes-group {
-                order: 2;
-                /* Place notes group second */
-                margin-left: 0;
-                /* Remove left margin */
-                margin-right: 0;
-                /* Remove right margin */
-                margin-top: 1rem;
-                /* Add some space above notes group */
-                flex-wrap: wrap;
-                /* Allow notes to wrap if too wide */
-                justify-content: center;
-                /* Center notes if they wrap */
-            }
-
-            .legend-group {
-                order: 1;
-                /* Place legend group first */
-                margin-left: 0;
-                /* Remove left margin */
-                margin-right: 0;
-                /* Remove right margin */
-                flex-wrap: wrap;
-                /* Allow legend items to wrap if too wide */
-                justify-content: center;
-                /* Center legend items if they wrap */
-            }
-
-            .note-top {
-                font-size: 0.6rem;
-                color: #555;
-                font-weight: 400;
-                margin-top: 0.5rem;
-                background-color: rgba(184, 243, 184, 0.8);
-                padding: 8px 12px;
-                border-radius: 8px;
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-                font-weight: bold;
-                color: #333;
-                white-space: nowrap;
-            }
-
-            .walkway-row {
-                padding: 0px 0;
-                margin: 8px 0;
-                background-color: rgba(0, 0, 0, 0.2);
-                color: white;
-                font-weight: bold;
-                border-radius: 4px;
-                font-size: 9px;
-                padding-left: 90px;
-            }
-
-            .walkway-column {
-                position: relative;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-weight: bold;
-                writing-mode: vertical-rl;
-                text-orientation: mixed;
-                white-space: nowrap;
-                font-size: 5px;
-            }
-
-
+        .header-banner .sub-heading {
+            font-size: 0.8rem;
+            color: #555;
+            font-weight: 400;
+            margin-top: 0.5rem;
+        }
+        .footer {
+            font-size: 0.8rem;
+        }
         }
 
         @media (max-width: 480px) {
             .container-fluid {
                 padding: 0.5rem;
             }
-
             #tableLayout {
                 gap: 2px;
             }
-
             .table-item span {
-                font-weight: normal;
-                /* Make font lighter to prevent blurring when very small */
+                font-weight: normal; /* Make font lighter to prevent blurring when very small */
             }
-
             .reserved-label {
                 font-size: 30%;
             }
-
             #stageImage {
                 width: 200px;
                 margin: -50px 0px;
             }
-
             .footer {
                 font-size: 0.75rem;
             }
-
             .sub-footer {
                 font-size: 0.8rem;
             }
-
             .legend-dot {
                 width: 15px;
                 height: 15px;
             }
 
-            .note-top {
-                font-size: 0.6rem;
-                color: #555;
-                font-weight: 400;
-                margin-top: 0.5rem;
-                background-color: rgba(184, 243, 184, 0.8);
-                padding: 8px 12px;
-                border-radius: 8px;
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-                font-weight: bold;
-                color: #333;
-                white-space: nowrap;
-            }
-
-             .table-item.square-table {
-            border-radius: 8px;
-            margin-top: -45px;
-        }
-
-        .table-item.square-table1 {
-            border-radius: 0px;
-        }
-
-
         }
     </style>
-</head>
+    </head>
+    <body>
+        <header class="header-banner">
+            <h1>ระบบจองโต๊ะงานเลี้ยง</h1>
+            <p class="sub-heading">
+                ร้อยดวงใจแห่งรัก คืนสู่เหย้า ชาว จ.ป. ❤️ จ.ว. ❤️ ส.ก.จ. <br> 51
+                ปี แห่งความภาคภูมิใจ<br>
+                ณ สนามฟุตบอล โรงเรียนสวนกุหลาบวิทยาลัย (จิรประวัติ) นครสวรรค์
+            </p>
+        </header>
+        <div class="container-fluid">
+            <div class="stage-container">
+                <div class="stage-backdrop"></div>
+                <img id="stageImage" src="stage.png" alt="เวทีคอนเสิร์ต"
+                    class="img-fluid">
 
-<body>
-    <header class="header-banner">
-        <h1>ระบบจองโต๊ะงานเลี้ยง</h1>
-        <p class="sub-heading">
-            ร้อยดวงใจแห่งรัก คืนสู่เหย้า ชาว จ.ป. ❤️ จ.ว. ❤️ ส.ก.จ. <br> 51
-            ปี แห่งความภาคภูมิใจ<br>
-            ณ สนามฟุตบอล โรงเรียนสวนกุหลาบวิทยาลัย (จิรประวัติ) นครสวรรค์
-        </p>
-
-    </header>
-
-    <div class="container-fluid">
-
-        <div class="stage-container">
-            <div class="stage-backdrop"></div>
-            <img id="stageImage" src="stage.png" alt="เวทีคอนเสิร์ต" class="img-fluid">
-
-        </div>
-
-        <!-- ส่วนสำหรับแสดงแผนผังโต๊ะ -->
-
-        <div class="table-layout-grid" id="tableLayout">
-
-            <!-- ตารางจะถูกสร้างขึ้นมาที่นี่ด้วย JavaScript -->
-        </div>
-
-        <div class="d-flex justify-content-center justify-content-lg-end align-items-center mt-4 gap-4 sub-footer">
-            <div class="notes-group">
-                <div class="table-note" id="presidentTableNote">
-                    โต๊ะสีเหลี่ยม K1 และ K2: โต๊ะประธาน
-                </div>
-                <div class="table-note" id="oldTeacherTableNote">
-                    โต๊ะสีเหลี่ยม J1 และ J10: โต๊ะครูเก่า
-                </div>
             </div>
+            
+            <!-- ส่วนสำหรับแสดงแผนผังโต๊ะ -->
 
-            <div class="legend-group d-flex gap-4">
+            <div class="table-layout-grid" id="tableLayout">
+
+                <!-- ตารางจะถูกสร้างขึ้นมาที่นี่ด้วย JavaScript -->
+            </div>
+<div
+                class="d-flex justify-content-center justify-content-lg-end align-items-center mt-4 gap-4 sub-footer">
                 <div class="d-flex align-items-center">
                     <div class="legend-dot available"></div>
                     <span class="ms-2">ว่าง</span>
@@ -561,122 +345,149 @@
                     <span class="ms-2">จองแล้ว</span>
                 </div>
             </div>
-
+            <div class="text-center sub-footer"> กรุณาเลือกโต๊ะที่ต้องการจอง
+                ที่อยู่ในสนามบอล โดยคลิกที่โต๊ะนั้น ๆ</div><br>
         </div>
-    </div>
-    <div class="alert alert-info text-center" role="alert" id="ticketNoteAlert">
-        ** หมายเหตุ: สำหรับโต๊ะ สถานะขึ้นจองแล้ว สามารถรับบัตรเข้างานได้
-        หลัง 31 ตุลาคม 2568 เป็นต้นไป **
-    </div>
 
-    <!-- Modal สำหรับแบบฟอร์มการจอง -->
-    <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="reservationModalLabel">จองโต๊ะ</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="reservationForm">
-                        <input type="hidden" id="tableIdInput" name="tableId">
-                        <div class="mb-3">
-                            <label for="tableNameDisplay" class="form-label">โต๊ะที่</label>
-                            <input type="text" class="form-control" id="tableNameDisplay" name="tableNameDisplay"
-                                readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="nameInput" class="form-label">ชื่อ</label>
-                            <input type="text" class="form-control" id="nameInput" name="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="lastNameInput" class="form-label">นามสกุล</label>
-                            <input type="text" class="form-control" id="lastNameInput" name="lastName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="phoneInput" class="form-label">เบอร์โทรศัพท์</label>
-                            <input type="tel" class="form-control" id="phoneInput" name="phone" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="batchInput" class="form-label">ชื่อรุ่น </label>
-                            <input type="text" class="form-control" id="batchInput" name="batch">
-                        </div>
-                        <div class="mb-3">
-                            <label for="gradYearInput" class="form-label">ปี
-                                พ.ศ. ที่จบ</label>
-                            <input type="number" class="form-control" id="gradYearInput" name="gradYear"
-                                placeholder="ตัวอย่าง: 2540" required>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                            <button type="submit" class="btn btn-success" id="submitBtn">ยืนยันการจอง</button>
-                        </div>
-                    </form>
+        <!-- Modal สำหรับแบบฟอร์มการจอง -->
+        <div class="modal fade" id="reservationModal" tabindex="-1"
+            aria-labelledby="reservationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"
+                            id="reservationModalLabel">จองโต๊ะ</h5>
+                        <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="reservationForm">
+                            <input type="hidden" id="tableIdInput"
+                                name="tableId">
+                            <div class="mb-3">
+                                <label for="tableNameDisplay"
+                                    class="form-label">โต๊ะที่</label>
+                                <input type="text" class="form-control"
+                                    id="tableNameDisplay"
+                                    name="tableNameDisplay" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="nameInput"
+                                    class="form-label">ชื่อ</label>
+                                <input type="text" class="form-control"
+                                    id="nameInput" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="lastNameInput"
+                                    class="form-label">นามสกุล</label>
+                                <input type="text" class="form-control"
+                                    id="lastNameInput" name="lastName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phoneInput"
+                                    class="form-label">เบอร์โทรศัพท์</label>
+                                <input type="tel" class="form-control"
+                                    id="phoneInput" name="phone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="batchInput"
+                                    class="form-label">ชื่อรุ่น </label>
+                                <input type="text" class="form-control"
+                                    id="batchInput" name="batch">
+                            </div>
+                            <div class="mb-3">
+                                <label for="gradYearInput" class="form-label">ปี
+                                    พ.ศ. ที่จบ</label>
+                                <input type="number" class="form-control"
+                                    id="gradYearInput" name="gradYear"
+                                    placeholder="ตัวอย่าง: 2540" required>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">ยกเลิก</button>
+                                <button type="submit" class="btn btn-success"
+                                    id="submitBtn">ยืนยันการจอง</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal สำหรับแสดงการอัปโหลดสลิป -->
-    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true"
-        data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="paymentModalLabel">ชำระเงินค่าจองโต๊ะ</h5>
-                </div>
-                <div class="modal-body text-center">
-                    <p class="mb-3">กรุณาโอนเงิน 3,600.00 บาท
-                        เข้าบัญชี<br><strong>ธนาคาร กสิกรไทย เลขที่บัญชี
-                            007-1-38891-3
-                            <br> ชื่อบัญชี นายมานิต โลหะวณิชย์
-                        </strong><br>และอัปโหลดสลิปเพื่อยืนยันการจอง</p>
+        <!-- Modal สำหรับแสดงการอัปโหลดสลิป -->
+        <div class="modal fade" id="paymentModal" tabindex="-1"
+            aria-labelledby="paymentModalLabel" aria-hidden="true"
+            data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"
+                            id="paymentModalLabel">ชำระเงินค่าจองโต๊ะ</h5>
+                    </div>
+                    <div class="modal-body text-center">
+                        <p class="mb-3">กรุณาโอนเงิน 3,600.00 บาท
+                            เข้าบัญชี<br><strong>ธนาคาร กสิกรไทย เลขที่บัญชี
+                                007-1-38891-3
+                                <br> ชื่อบัญชี นายมานิต โลหะวณิชย์
+                            </strong><br>และอัปโหลดสลิปเพื่อยืนยันการจอง</p>
 
-                    <div class="mb-3">
-                        <label for="paymentAmount" class="form-label">จำนวนเงินที่โอน (บาท)</label>
-                        <input type="number" class="form-control" id="paymentAmount" name="paymentAmount" step="0.01"
-                            required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="transferDate" class="form-label">วันที่โอน</label>
-                        <input type="date" class="form-control" id="transferDate" name="transferDate" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="transferTime" class="form-label">เวลาที่โอน</label>
-                        <input type="time" class="form-control" id="transferTime" name="transferTime" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="slipUpload" class="form-label">อัปโหลดสลิปการโอนเงิน</label>
-                        <input class="form-control" type="file" id="slipUpload" name="slipUpload" accept="image/*"
-                            required>
-                        <img id="slipPreview" src="#" alt="ตัวอย่างสลิป"
-                            style="display:none; max-width: 100%; height: auto; border-radius: 0.5rem; margin-top: 1rem;">
-                    </div>
-
-                    <div class="payment-status mt-3">
-                        <div id="loadingSpinner" class="spinner-border text-primary" role="status"
-                            style="display:none;">
-                            <span class="visually-hidden">Loading...</span>
+                        <div class="mb-3">
+                            <label for="paymentAmount"
+                                class="form-label">จำนวนเงินที่โอน (บาท)</label>
+                            <input type="number" class="form-control"
+                                id="paymentAmount" name="paymentAmount"
+                                step="0.01" required>
                         </div>
-                        <span id="paymentStatusText" class="ms-2 text-primary fw-bold"></span>
+                        <div class="mb-3">
+                            <label for="transferDate"
+                                class="form-label">วันที่โอน</label>
+                            <input type="date" class="form-control"
+                                id="transferDate" name="transferDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transferTime"
+                                class="form-label">เวลาที่โอน</label>
+                            <input type="time" class="form-control"
+                                id="transferTime" name="transferTime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="slipUpload"
+                                class="form-label">อัปโหลดสลิปการโอนเงิน</label>
+                            <input class="form-control" type="file"
+                                id="slipUpload" name="slipUpload"
+                                accept="image/*" required>
+                            <img id="slipPreview" src="#" alt="ตัวอย่างสลิป"
+                                style="display:none; max-width: 100%; height: auto; border-radius: 0.5rem; margin-top: 1rem;">
+                        </div>
+
+                        <div class="payment-status mt-3">
+                            <div id="loadingSpinner"
+                                class="spinner-border text-primary"
+                                role="status" style="display:none;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span id="paymentStatusText"
+                                class="ms-2 text-primary fw-bold"></span>
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-outline-danger" id="cancelPaymentBtn">ยกเลิก</button>
-                    <button type="button" class="btn btn-success" id="verifySlipBtn" disabled>ยืนยันการชำระเงิน</button>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-outline-danger"
+                            id="cancelPaymentBtn">ยกเลิก</button>
+                        <button type="button" class="btn btn-success"
+                            id="verifySlipBtn"
+                            disabled>ยืนยันการชำระเงิน</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
+        <!-- Bootstrap 5 JS -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
 
-    <script>
+        <script>
         // --- GLOBAL STATE ---
         let allReservations = [];
         let tempReservationData = null; // To hold form data between reservation and payment steps
@@ -685,7 +496,7 @@
         const tableLayout = document.getElementById('tableLayout');
         const reservationForm = document.getElementById('reservationForm');
         const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
-
+        
         // Payment Modal Elements
         const paymentModalEl = document.getElementById('paymentModal');
         const paymentModal = new bootstrap.Modal(paymentModalEl);
@@ -701,12 +512,12 @@
         const API_VERIFY_SLIP = 'api/verify_slip.php';
 
         // --- LAYOUT CONFIG ---
-        const layoutConfig = [{ id: 'main-section', className: 'section-main', cols: 20, startCol: 'A', rows: 15, startRow: 1 }];
+        const layoutConfig = [ { id: 'main-section', className: 'section-main', cols: 20, startCol: 'A', rows: 15, startRow: 1 } ];
 
         // --- HELPER FUNCTIONS ---
         function showMessage(message, isSuccess = true, errorDetails = null) {
             const title = isSuccess ? 'สำเร็จ!' : 'เกิดข้อผิดพลาด';
-
+            
             // Per user request, always log to console
             if (isSuccess) {
                 console.log(`Success: ${message}`);
@@ -741,17 +552,12 @@
                     const tableDiv = document.createElement('div');
                     tableDiv.className = `table-item ${section.className}`;
                     tableDiv.id = tableName;
-                    
+
                     if ((colChar === 'K' && (rowNum >= 1 && rowNum <= 2)) ||
                         (colChar === 'J' && (rowNum >= 1 && rowNum <= 10))) {
-                        tableDiv.classList.add('square-table1');
-                    }
-
-                    if ((colChar === 'J' && (rowNum >= 6 && rowNum <= 10))) {
                         tableDiv.classList.add('square-table');
-                       
                     }
-
+                    
                     tableDiv.innerHTML = `<span>${tableName}</span>`;
                     tableDiv.onclick = () => openReservationForm(tableName);
                     return tableDiv;
@@ -768,8 +574,6 @@
                         grid.style.gridTemplateColumns = 'repeat(9, 1fr) 1fr 0.5fr repeat(10, 1fr)';
                     }
 
-                    const middleRowInSection = startRowIndex + Math.floor((endRowIndex - startRowIndex) / 2);
-
                     for (let i = startRowIndex; i < endRowIndex; i++) {
                         const rowNum = section.startRow + i;
                         // Columns A-I
@@ -777,14 +581,11 @@
                             const colChar = String.fromCharCode(section.startCol.charCodeAt(0) + j);
                             grid.appendChild(createTableCell(colChar, rowNum));
                         }
-
+                        
                         // I-J Walkway is only added if hasIJWalkway is true.
                         if (hasIJWalkway) {
                             const walkwayIJ = document.createElement('div');
                             walkwayIJ.className = 'walkway-column';
-                            if (i === middleRowInSection) {
-                                walkwayIJ.textContent = 'ทางเดิน';
-                            }
                             grid.appendChild(walkwayIJ);
                         }
 
@@ -795,9 +596,6 @@
                         // J-K Walkway
                         const walkwayJK = document.createElement('div');
                         walkwayJK.className = 'walkway-column';
-                        if (i === middleRowInSection) {
-                            walkwayJK.textContent = 'ทางเดิน';
-                        }
                         grid.appendChild(walkwayJK);
 
                         // Columns K-T
@@ -900,7 +698,7 @@
                 }
                 return;
             }
-
+            
             // If not reserved or pending, show the booking form
             reservationForm.reset();
             document.getElementById('tableIdInput').value = tableId;
@@ -990,7 +788,7 @@
                 slipPreview.style.display = 'none';
             }
         }
-
+        
         // --- INITIAL DATA LOAD & POLLING ---
 
         // Function for silent background updates
@@ -1001,7 +799,7 @@
                     console.error('Polling Error: Could not connect to the server.');
                     return; // Fail silently
                 }
-
+                
                 const result = await response.json();
                 if (result.success) {
                     allReservations = Array.isArray(result.data) ? result.data : [];
@@ -1024,16 +822,16 @@
 
             try {
                 createTableLayout(layoutConfig); // Create layout first
-
+                
                 // Perform the first fetch and show errors to the user
                 const response = await fetch(API_GET_RESERVATIONS);
                 if (!response.ok) throw new Error('Could not connect to the server.');
-
+                
                 const result = await response.json();
                 if (result.success) {
                     allReservations = Array.isArray(result.data) ? result.data : [];
                     updateTableStatus();
-
+                    
                     // If initial load is successful, start polling
                     setInterval(fetchAndUpdate, 30000); // Poll every 30 seconds
 
@@ -1057,13 +855,9 @@
                 const { data: { text } } = await Tesseract.recognize(
                     file,
                     'tha+eng',
-                    {
-                        logger: m => {
-                            if (m.status === 'recognizing text') {
-                                paymentStatusText.textContent = `กำลังวิเคราะห์... ${(m.progress * 100).toFixed(0)}%`;
-                            }
-                        }
-                    }
+                    { logger: m => { if(m.status === 'recognizing text') { 
+                        paymentStatusText.textContent = `กำลังวิเคราะห์... ${(m.progress * 100).toFixed(0)}%`;
+                     } } }
                 );
 
                 console.log("OCR Result:", text);
@@ -1071,7 +865,7 @@
                 const keywords = ['โอนเงิน', 'สำเร็จ', 'ref', 'amount', 'จำนวนเงิน', 'สลิป', 'กสิกรไทย', 'kbank', 'scb', 'ktb', 'bbl', 'bay', 'ttb', 'promptpay', 'พร้อมเพย์'];
                 const textLower = text.toLowerCase();
                 const foundKeywords = keywords.filter(kw => textLower.includes(kw.toLowerCase()));
-
+                
                 const hasNumbers = /\d{4,}/.test(text);
 
                 if (foundKeywords.length > 0 && hasNumbers) {
@@ -1079,7 +873,7 @@
                     verifySlipBtn.disabled = false;
                 } else {
                     paymentStatusText.innerHTML = '⚠️ ไม่ใช่สลิปโอนเงิน โปรดอัปโหลดใหม่';
-                    verifySlipBtn.disabled = true;
+                    verifySlipBtn.disabled = true; 
                     Swal.fire({
                         icon: 'error',
                         title: 'ไฟล์ไม่ถูกต้อง',
@@ -1118,7 +912,7 @@
                 slipPreview.src = URL.createObjectURL(file);
                 slipPreview.style.display = 'block';
                 verifySlipBtn.disabled = true; // Disable until check is complete
-
+                
                 await verifySlipImage(file);
 
             } else {
@@ -1127,13 +921,13 @@
                 paymentStatusText.textContent = '';
             }
         });
-
+        
         // Handle payment cancellation
         cancelPaymentBtn.addEventListener('click', () => {
             paymentModal.hide();
             reservationModal.show(); // Go back to the details form
         });
-
+        
         // Reset payment modal when it's hidden
         paymentModalEl.addEventListener('hidden.bs.modal', () => {
             slipUpload.value = '';
@@ -1145,12 +939,11 @@
         });
 
     </script>
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">สำหรับผู้ดูแลระบบ: <a href="admin.php"
-                    class="btn btn-sm btn-outline-primary">จัดการการจอง</a></span>
-        </div>
-    </footer>
-</body>
-
+        <footer class="footer mt-auto py-3 bg-light">
+            <div class="container text-center">
+                <span class="text-muted">สำหรับผู้ดูแลระบบ: <a href="admin.php"
+                        class="btn btn-sm btn-outline-primary">จัดการการจอง</a></span>
+            </div>
+        </footer>
+    </body>
 </html>

@@ -1,0 +1,840 @@
+<!-- โค้ด HTML + Bootstrap 5 + JavaScript: index.html (พร้อม Slip Verification และบันทึกการชำระเงิน) -->
+<!DOCTYPE html>
+<html>
+    <head>
+        <base target="_top">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
+        <title>ระบบจองโต๊ะงานเลี้ยง</title>
+        <!-- Bootstrap 5 CSS -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+            crossorigin="anonymous">
+        <!-- Google Font -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=K2D:wght@400;700&display=swap"
+            rel="stylesheet">
+        <!-- SweetAlert2 CSS -->
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.1/dist/sweetalert2.min.css">
+        <!-- SweetAlert2 JS -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+        <!-- Tesseract.js for OCR -->
+        <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+        <style>
+        body {
+            font-family: 'K2D', sans-serif;
+            background-color: #a9d6f5; /* สีฟ้าสดเป็นสีพื้นหลังสำรอง */
+            background-image: linear-gradient(to top right, #f8b4c8, #a9d6f5); /* ไล่เฉดสีชมพูไปฟ้า (สดขึ้น 30%) */
+            color: #212529; /* สีตัวอักษรหลักเป็นสีเข้ม */
+        }
+        .header-banner {
+            padding: 1.5rem 0.5rem;
+    margin-bottom: 2rem;
+    background-color: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+    text-align: center;
+        }
+        .header-banner h1 {
+            font-weight: 700;
+            color: #333;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .header-banner .sub-heading {
+            font-size: 1.25rem;
+            color: #555;
+            font-weight: 400;
+            margin-top: 0.5rem;
+        }
+        .sub-footer {
+            color: #555;
+            font-weight: 400;
+            margin-top: 0.5rem;
+        }
+        h1 {
+            color: #0d6efd; /* ทำให้หัวข้อเป็นสีน้ำเงินหลักของ Bootstrap */
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1); /* เพิ่มเงาจางๆ ให้ดูมีมิติ */
+        }
+        .container-fluid {
+            padding: 1rem; /* Reduced padding to give more space to the grid */
+            max-width: 1600px;
+        }
+        .stage-container {
+            position: relative;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        #stageImage {
+            width: 400px;
+            max-width: 100%;
+            height: auto;
+            margin: -90px 10px;
+            position: relative;
+            z-index: 1;
+            border-radius: 10px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+        }
+        
+        #tableLayout {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            /* Always 20 columns, as requested */
+            grid-template-columns: repeat(20, 1fr);
+            gap: 4px; /* Smaller gap for a tighter grid */
+            padding: 1rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            overflow: hidden; /* Important to contain the blurred pseudo-element */
+        }
+
+        #tableLayout::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background-image: url('soccer-clipart-lg.png');
+            background-size: cover;
+            background-position: center;
+            filter: blur(3px);
+            transform: scale(1.1); /* Scale to avoid blurred edges */
+        }
+
+        .table-item {
+            /* Responsive circle using aspect-ratio trick */
+            width: 100%;
+            padding-bottom: 100%;
+            height: 0;
+            border-radius: 50%;
+            position: relative;
+            
+            background: rgba(255, 255, 255, 0.5); /* Made slightly more transparent */
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            /* backdrop-filter removed */
+        }
+
+        .table-item span { /* The container for the table name */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000000;
+            font-weight: 700;
+            font-size: 75%; /* Font size is relative to the parent circle's width */
+            text-align: center;
+            width: 100%;
+            text-shadow: 0 0 4px white; /* White glow for readability */
+        }
+
+        .table-item:hover {
+            transform: scale(1.1);
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 2; /* Bring to front on hover */
+        }
+
+        .table-item.reserved {
+            background-color: #dc3545 !important; /* Red color for reserved */
+            border-color: #b02a37; /* Darker red for border */
+            cursor: not-allowed;
+        }
+        .table-item.reserved span {
+            color: white;
+            text-shadow: none;
+        }
+        .table-item.reserved:hover {
+            transform: none;
+            background-color: #dc3545; /* Ensure hover doesn't change background */
+        }
+
+        .table-item.pending {
+            background-color: #ffc107 !important; /* Orange color for pending */
+            border-color: #e0a800; /* Darker orange for border */
+            cursor: pointer; /* ยังสามารถคลิกได้ */
+        }
+        .table-item.pending span {
+            color: black !important; /* ข้อความสีดำ */
+            text-shadow: none !important;
+        }
+        .table-item.pending:hover {
+            transform: scale(1.1);
+            background-color: #ffcd39 !important; /* สีส้มอ่อนลงเมื่อ hover */
+        }
+
+        .reserved-label {
+            position: absolute;
+            bottom: 5%;
+            left: 0;
+            right: 0;
+            font-size: 35%; /* Relative font size */
+            font-weight: 400;
+            opacity: 0.9;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            text-align: center;
+            color: white;
+        }
+
+        /* This rule is no longer needed as body text is dark again */
+
+        /* Other styles for modals etc. remain the same */
+        .stage-backdrop { display:none; } /* Hide backdrop as it does not add much value now */
+        .modal-footer { justify-content: center; }
+        
+        .payment-status { display: flex; align-items: center; justify-content: center; }
+        .spinner-border { width: 1.5rem; height: 1.5rem; }
+        #slipPreview { max-width: 100%; height: auto; border-radius: 0.5rem; margin-top: 1rem; }
+
+        .legend-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        .legend-dot.available {
+            background-color: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        .legend-dot.pending {
+            background-color: #ffc107;
+            border: 1px solid #e0a800;
+        }
+        .legend-dot.reserved {
+            background-color: #dc3545;
+            border: 1px solid #b02a37;
+        }
+
+        /* Media queries for minor adjustments */
+        @media (max-width: 768px) {
+       
+            .table-item span { /* The container for the table name */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000000;
+            font-weight: 700;
+            font-size: 50%; /* Font size is relative to the parent circle's width */
+            text-align: center;
+            width: 100%;
+            text-shadow: 0 0 4px white; /* White glow for readability */
+        }
+        .header-banner .sub-heading {
+            font-size: 0.8rem;
+            color: #555;
+            font-weight: 400;
+            margin-top: 0.5rem;
+        }
+        .footer {
+            font-size: 0.8rem;
+        }
+        }
+
+        @media (max-width: 480px) {
+            .container-fluid {
+                padding: 0.5rem;
+            }
+            #tableLayout {
+                gap: 2px;
+            }
+            .table-item span {
+                font-weight: normal; /* Make font lighter to prevent blurring when very small */
+            }
+            .reserved-label {
+                font-size: 30%;
+            }
+            #stageImage {
+                width: 200px;
+                margin: -50px 0px;
+            }
+            .footer {
+                font-size: 0.75rem;
+            }
+            .sub-footer {
+                font-size: 0.8rem;
+            }
+            .legend-dot {
+                width: 15px;
+                height: 15px;
+            }
+
+        }
+    </style>
+    </head>
+    <body>
+        <header class="header-banner">
+            <h1>ระบบจองโต๊ะงานเลี้ยง</h1>
+            <p class="sub-heading">
+                ร้อยดวงใจแห่งรัก คืนสู่เหย้า ชาว จ.ป. ❤️ จ.ว. ❤️ ส.ก.จ. <br> 51
+                ปี แห่งความภาคภูมิใจ<br>
+                ณ สนามฟุตบอล โรงเรียนสวนกุหลาบวิทยาลัย (จิรประวัติ) นครสวรรค์
+            </p>
+        </header>
+        <div class="container-fluid">
+            <div class="stage-container">
+                <div class="stage-backdrop"></div>
+                <img id="stageImage" src="stage.png" alt="เวทีคอนเสิร์ต"
+                    class="img-fluid">
+
+            </div>
+            
+            <!-- ส่วนสำหรับแสดงแผนผังโต๊ะ -->
+
+            <div class="table-layout-grid" id="tableLayout">
+
+                <!-- ตารางจะถูกสร้างขึ้นมาที่นี่ด้วย JavaScript -->
+            </div>
+<div
+                class="d-flex justify-content-center justify-content-lg-end align-items-center mt-4 gap-4 sub-footer">
+                <div class="d-flex align-items-center">
+                    <div class="legend-dot available"></div>
+                    <span class="ms-2">ว่าง</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="legend-dot pending"></div>
+                    <span class="ms-2">รอตรวจสอบ</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="legend-dot reserved"></div>
+                    <span class="ms-2">จองแล้ว</span>
+                </div>
+            </div>
+            <div class="text-center sub-footer"> กรุณาเลือกโต๊ะที่ต้องการจอง
+                ที่อยู่ในสนามบอล โดยคลิกที่โต๊ะนั้น ๆ</div><br>
+        </div>
+
+        <!-- Modal สำหรับแบบฟอร์มการจอง -->
+        <div class="modal fade" id="reservationModal" tabindex="-1"
+            aria-labelledby="reservationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"
+                            id="reservationModalLabel">จองโต๊ะ</h5>
+                        <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="reservationForm">
+                            <input type="hidden" id="tableIdInput"
+                                name="tableId">
+                            <div class="mb-3">
+                                <label for="tableNameDisplay"
+                                    class="form-label">โต๊ะที่</label>
+                                <input type="text" class="form-control"
+                                    id="tableNameDisplay"
+                                    name="tableNameDisplay" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="nameInput"
+                                    class="form-label">ชื่อ</label>
+                                <input type="text" class="form-control"
+                                    id="nameInput" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="lastNameInput"
+                                    class="form-label">นามสกุล</label>
+                                <input type="text" class="form-control"
+                                    id="lastNameInput" name="lastName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phoneInput"
+                                    class="form-label">เบอร์โทรศัพท์</label>
+                                <input type="tel" class="form-control"
+                                    id="phoneInput" name="phone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="batchInput"
+                                    class="form-label">ชื่อรุ่น </label>
+                                <input type="text" class="form-control"
+                                    id="batchInput" name="batch">
+                            </div>
+                            <div class="mb-3">
+                                <label for="gradYearInput" class="form-label">ปี
+                                    พ.ศ. ที่จบ</label>
+                                <input type="number" class="form-control"
+                                    id="gradYearInput" name="gradYear"
+                                    placeholder="ตัวอย่าง: 2540" required>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">ยกเลิก</button>
+                                <button type="submit" class="btn btn-success"
+                                    id="submitBtn">ยืนยันการจอง</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal สำหรับแสดงการอัปโหลดสลิป -->
+        <div class="modal fade" id="paymentModal" tabindex="-1"
+            aria-labelledby="paymentModalLabel" aria-hidden="true"
+            data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"
+                            id="paymentModalLabel">ชำระเงินค่าจองโต๊ะ</h5>
+                    </div>
+                    <div class="modal-body text-center">
+                        <p class="mb-3">กรุณาโอนเงิน 3,600.00 บาท
+                            เข้าบัญชี<br><strong>ธนาคาร กสิกรไทย เลขที่บัญชี
+                                007-1-38891-3
+                                <br> ชื่อบัญชี นายมานิต โลหะวณิชย์
+                            </strong><br>และอัปโหลดสลิปเพื่อยืนยันการจอง</p>
+
+                        <div class="mb-3">
+                            <label for="paymentAmount"
+                                class="form-label">จำนวนเงินที่โอน (บาท)</label>
+                            <input type="number" class="form-control"
+                                id="paymentAmount" name="paymentAmount"
+                                step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transferDate"
+                                class="form-label">วันที่โอน</label>
+                            <input type="date" class="form-control"
+                                id="transferDate" name="transferDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transferTime"
+                                class="form-label">เวลาที่โอน</label>
+                            <input type="time" class="form-control"
+                                id="transferTime" name="transferTime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="slipUpload"
+                                class="form-label">อัปโหลดสลิปการโอนเงิน</label>
+                            <input class="form-control" type="file"
+                                id="slipUpload" name="slipUpload"
+                                accept="image/*" required>
+                            <img id="slipPreview" src="#" alt="ตัวอย่างสลิป"
+                                style="display:none; max-width: 100%; height: auto; border-radius: 0.5rem; margin-top: 1rem;">
+                        </div>
+
+                        <div class="payment-status mt-3">
+                            <div id="loadingSpinner"
+                                class="spinner-border text-primary"
+                                role="status" style="display:none;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span id="paymentStatusText"
+                                class="ms-2 text-primary fw-bold"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-outline-danger"
+                            id="cancelPaymentBtn">ยกเลิก</button>
+                        <button type="button" class="btn btn-success"
+                            id="verifySlipBtn"
+                            disabled>ยืนยันการชำระเงิน</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap 5 JS -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+
+        <script>
+        // --- GLOBAL STATE ---
+        let allReservations = [];
+        let tempReservationData = null; // To hold form data between reservation and payment steps
+
+        // --- DOM ELEMENTS & BOOTSTRAP MODALS ---
+        const tableLayout = document.getElementById('tableLayout');
+        const reservationForm = document.getElementById('reservationForm');
+        const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
+        
+        // Payment Modal Elements
+        const paymentModalEl = document.getElementById('paymentModal');
+        const paymentModal = new bootstrap.Modal(paymentModalEl);
+        const slipUpload = document.getElementById('slipUpload');
+        const slipPreview = document.getElementById('slipPreview');
+        const verifySlipBtn = document.getElementById('verifySlipBtn');
+        const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const paymentStatusText = document.getElementById('paymentStatusText');
+
+        // --- API ENDPOINTS ---
+        const API_GET_RESERVATIONS = 'api/get_reservations.php';
+        const API_VERIFY_SLIP = 'api/verify_slip.php';
+
+        // --- LAYOUT CONFIG ---
+        const layoutConfig = [ { id: 'main-section', className: 'section-main', cols: 20, startCol: 'A', rows: 15, startRow: 1 } ];
+
+        // --- HELPER FUNCTIONS ---
+        function showMessage(message, isSuccess = true, errorDetails = null) {
+            const title = isSuccess ? 'สำเร็จ!' : 'เกิดข้อผิดพลาด';
+            
+            // Per user request, always log to console
+            if (isSuccess) {
+                console.log(`Success: ${message}`);
+            } else {
+                console.error(`Error_s: ${message}`, errorDetails || '');
+            }
+
+            return Swal.fire({
+                title: title,
+                html: message, // Use html to allow for line breaks
+                icon: isSuccess ? 'success' : 'error',
+                confirmButtonText: 'ตกลง'
+            });
+        }
+
+        // --- CORE LOGIC ---
+
+        // 1. Create the visual table layout
+        function createTableLayout(config) {
+            tableLayout.innerHTML = '';
+            tableLayout.style.display = 'grid';
+            tableLayout.style.gridTemplateColumns = 'repeat(20, 1fr)';
+            config.forEach(section => {
+                for (let i = 0; i < section.rows; i++) {
+                    for (let j = 0; j < section.cols; j++) {
+                        const colChar = String.fromCharCode(section.startCol.charCodeAt(0) + j);
+                        const tableName = `${colChar}${section.startRow + i}`;
+                        const tableDiv = document.createElement('div');
+                        tableDiv.className = `table-item ${section.className}`;
+                        tableDiv.id = tableName;
+                        tableDiv.innerHTML = `<span>${tableName}</span>`;
+                        tableDiv.onclick = () => openReservationForm(tableName);
+                        tableLayout.appendChild(tableDiv);
+                    }
+                }
+            });
+            updateTableStatus();
+        }
+
+        // 2. Update table status (reserved/pending/available)
+        function updateTableStatus() {
+            // First, reset all tables to their default available state
+            document.querySelectorAll('.table-item').forEach(table => {
+                table.classList.remove('reserved', 'pending');
+                const oldLabel = table.querySelector('.reserved-label');
+                if (oldLabel) oldLabel.remove();
+            });
+
+            // Then, apply the correct status based on fetched data
+            allReservations.forEach(res => {
+                const tableElement = document.getElementById(res.TableID);
+                if (tableElement) {
+                    const label = document.createElement('div');
+                    label.className = 'reserved-label';
+
+                    if (res.status === 'verified') {
+                        tableElement.classList.add('reserved');
+                        label.textContent = 'จองแล้ว';
+                        tableElement.appendChild(label);
+                    } else if (res.status === 'pending') {
+                        tableElement.classList.add('pending');
+                        label.textContent = 'รอตรวจสอบ';
+                        tableElement.appendChild(label);
+                    }
+                }
+            });
+        }
+
+        // 3. Open the reservation form or show info when a table is clicked
+        function openReservationForm(tableId) {
+            const tableElement = document.getElementById(tableId);
+            const isReserved = tableElement && tableElement.classList.contains('reserved');
+            const isPending = tableElement && tableElement.classList.contains('pending');
+
+            if (isReserved || isPending) {
+                const reservation = allReservations.find(res => res.TableID === tableId);
+                if (reservation) {
+                    let statusText = '';
+                    let statusColor = '';
+                    if (reservation.status === 'verified') {
+                        statusText = 'ยืนยันการจองแล้ว';
+                        statusColor = 'green';
+                    } else if (reservation.status === 'pending') {
+                        statusText = 'รอการตรวจสอบ';
+                        statusColor = 'orange';
+                    }
+
+                    Swal.fire({
+                        title: `ข้อมูลการจองโต๊ะ ${tableId}`,
+                        html: `<div style="text-align: left; padding: 0 1rem; line-height: 1.8;">
+                                <p style="margin: 0;"><strong>สถานะ:</strong> <span style="color:${statusColor}; font-weight: bold;">${statusText}</span></p>
+                                <p style="margin: 0;"><strong>ชื่อ-นามสกุล:</strong> ${reservation.name} ${reservation.lastName}</p>
+                                <p style="margin: 0;"><strong>เบอร์โทรศัพท์:</strong> ${reservation.phone}</p>
+                                <p style="margin: 0;"><strong>รุ่น:</strong> ${reservation.batch}</p>
+                                <p style="margin: 0;"><strong>ปีที่จบ:</strong> ${reservation.gradYear || 'N/A'}</p>
+                                <p style="margin: 0;"><strong>จำนวนเงินที่โอน:</strong> ${reservation.payment_amount || 'N/A'} บาท</p>
+                                <p style="margin: 0;"><strong>วันที่โอน:</strong> ${reservation.transfer_date || 'N/A'}</p>
+                                <p style="margin: 0;"><strong>เวลาที่โอน:</strong> ${reservation.transfer_time || 'N/A'}</p>
+                               </div>`,
+                        icon: 'info',
+                        confirmButtonText: 'ตกลง'
+                    });
+                }
+                return;
+            }
+            
+            // If not reserved or pending, show the booking form
+            reservationForm.reset();
+            document.getElementById('tableIdInput').value = tableId;
+            document.getElementById('tableNameDisplay').value = tableId;
+            reservationModal.show();
+        }
+
+        // 4. Handle the first form submission (user details)
+        function submitReservationDetails(event) {
+            event.preventDefault();
+            const formData = new FormData(reservationForm);
+            tempReservationData = Object.fromEntries(formData.entries());
+
+            if (!tempReservationData.name || !tempReservationData.lastName || !tempReservationData.phone) {
+                showMessage('กรุณากรอกชื่อ, นามสกุล, และเบอร์โทรศัพท์ให้ครบถ้วน', false);
+                return;
+            }
+
+            // Hide reservation modal and show payment modal
+            reservationModal.hide();
+            paymentModal.show();
+        }
+
+        // 5. Handle the final step: slip verification and booking
+        async function handleSlipVerification() {
+            if (!slipUpload.files || slipUpload.files.length === 0) {
+                showMessage('กรุณาเลือกไฟล์สลิปก่อน', false);
+                return;
+            }
+
+            const paymentAmount = document.getElementById('paymentAmount').value;
+            const transferDate = document.getElementById('transferDate').value;
+            const transferTime = document.getElementById('transferTime').value;
+
+            if (!paymentAmount || !transferDate || !transferTime) {
+                showMessage('กรุณากรอกจำนวนเงิน, วันที่โอน และเวลาที่โอน', false);
+                return;
+            }
+
+            loadingSpinner.style.display = 'block';
+            verifySlipBtn.disabled = true;
+            cancelPaymentBtn.disabled = true;
+            paymentStatusText.textContent = 'กำลังอัปโหลดและตรวจสอบสลิป...';
+
+            const slipFile = slipUpload.files[0];
+            const submissionData = new FormData();
+
+            // Append reservation data and slip file
+            for (const key in tempReservationData) {
+                submissionData.append(key, tempReservationData[key]);
+            }
+            submissionData.append('slipUpload', slipFile);
+            submissionData.append('payment_amount', paymentAmount);
+            submissionData.append('transferDate', transferDate);
+            submissionData.append('transferTime', transferTime);
+
+            try {
+                const response = await fetch(API_VERIFY_SLIP, {
+                    method: 'POST',
+                    body: submissionData // No 'Content-Type' header needed for FormData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    // Create a new error object to hold the details
+                    const error = new Error(result.message || 'เกิดข้อผิดพลาดที่ไม่รู้จัก');
+                    error.details = result.details || null; // Attach details from PHP
+                    throw error;
+                }
+
+                // Success!
+                paymentModal.hide();
+                await showMessage(`จองโต๊ะ ${tempReservationData.tableId} สำเร็จแล้ว!<br>รอผู้ดูแลตรวจสอบและอนุมัติการจองครับ`);
+                fetchAndUpdate(); // Refresh table data
+
+            } catch (error) {
+                // Pass the specific error message from the server directly.
+                // The PHP script provides user-friendly messages.
+                showMessage(error.message, false, error.details);
+            } finally {
+                // Reset payment modal state
+                loadingSpinner.style.display = 'none';
+                paymentStatusText.textContent = '';
+                cancelPaymentBtn.disabled = false;
+                slipUpload.value = ''; // Clear the file input
+                slipPreview.style.display = 'none';
+            }
+        }
+        
+        // --- INITIAL DATA LOAD & POLLING ---
+
+        // Function for silent background updates
+        async function fetchAndUpdate() {
+            try {
+                const response = await fetch(API_GET_RESERVATIONS);
+                if (!response.ok) {
+                    console.error('Polling Error: Could not connect to the server.');
+                    return; // Fail silently
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    allReservations = Array.isArray(result.data) ? result.data : [];
+                    updateTableStatus();
+                } else {
+                    console.error('Polling Error:', result.message || 'Failed to load data.');
+                }
+            } catch (error) {
+                console.error('Polling Error:', error.message);
+            }
+        }
+
+        // Function for the first page load with a loading indicator
+        async function initialLoad() {
+            Swal.fire({
+                title: 'กำลังโหลดข้อมูลโต๊ะ...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                createTableLayout(layoutConfig); // Create layout first
+                
+                // Perform the first fetch and show errors to the user
+                const response = await fetch(API_GET_RESERVATIONS);
+                if (!response.ok) throw new Error('Could not connect to the server.');
+                
+                const result = await response.json();
+                if (result.success) {
+                    allReservations = Array.isArray(result.data) ? result.data : [];
+                    updateTableStatus();
+                    
+                    // If initial load is successful, start polling
+                    setInterval(fetchAndUpdate, 30000); // Poll every 30 seconds
+
+                } else {
+                    throw new Error(result.message || 'Failed to load data.');
+                }
+            } catch (error) {
+                showMessage(`เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}`, false);
+            } finally {
+                Swal.close();
+            }
+        }
+
+        // --- SLIP VERIFICATION (OCR) ---
+        async function verifySlipImage(file) {
+            paymentStatusText.textContent = 'กำลังตรวจสอบสลิป...';
+            verifySlipBtn.disabled = true;
+            loadingSpinner.style.display = 'block';
+
+            try {
+                const { data: { text } } = await Tesseract.recognize(
+                    file,
+                    'tha+eng',
+                    { logger: m => { if(m.status === 'recognizing text') { 
+                        paymentStatusText.textContent = `กำลังวิเคราะห์... ${(m.progress * 100).toFixed(0)}%`;
+                     } } }
+                );
+
+                console.log("OCR Result:", text);
+
+                const keywords = ['โอนเงิน', 'สำเร็จ', 'ref', 'amount', 'จำนวนเงิน', 'สลิป', 'กสิกรไทย', 'kbank', 'scb', 'ktb', 'bbl', 'bay', 'ttb', 'promptpay', 'พร้อมเพย์'];
+                const textLower = text.toLowerCase();
+                const foundKeywords = keywords.filter(kw => textLower.includes(kw.toLowerCase()));
+                
+                const hasNumbers = /\d{4,}/.test(text);
+
+                if (foundKeywords.length > 0 && hasNumbers) {
+                    paymentStatusText.innerHTML = 'ตรวจสอบสลิปเบื้องต้นแล้ว <span style="color: green;">✔</span>';
+                    verifySlipBtn.disabled = false;
+                } else {
+                    paymentStatusText.innerHTML = '⚠️ ไม่ใช่สลิปโอนเงิน โปรดอัปโหลดใหม่';
+                    verifySlipBtn.disabled = true; 
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ไฟล์ไม่ถูกต้อง',
+                        html: 'ระบบไม่พบข้อมูลที่บ่งชี้ว่าเป็นสลิปโอนเงิน<br>กรุณาอัปโหลดไฟล์สลิปที่ถูกต้องเพื่อดำเนินการต่อ',
+                        confirmButtonText: 'ตกลง'
+                    });
+                }
+            } catch (error) {
+                console.error("OCR Error:", error);
+                paymentStatusText.textContent = 'เกิดข้อผิดพลาดในการตรวจสอบสลิป';
+                verifySlipBtn.disabled = false;
+            } finally {
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        window.onload = initialLoad;
+        reservationForm.addEventListener('submit', submitReservationDetails);
+        verifySlipBtn.addEventListener('click', handleSlipVerification);
+
+        slipUpload.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                // Basic file type check before OCR
+                if (!file.type.startsWith('image/')) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ไฟล์ไม่ถูกต้อง',
+                        text: 'กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, etc.)'
+                    });
+                    slipUpload.value = ''; // Reset file input
+                    return;
+                }
+
+                slipPreview.src = URL.createObjectURL(file);
+                slipPreview.style.display = 'block';
+                verifySlipBtn.disabled = true; // Disable until check is complete
+                
+                await verifySlipImage(file);
+
+            } else {
+                slipPreview.style.display = 'none';
+                verifySlipBtn.disabled = true;
+                paymentStatusText.textContent = '';
+            }
+        });
+        
+        // Handle payment cancellation
+        cancelPaymentBtn.addEventListener('click', () => {
+            paymentModal.hide();
+            reservationModal.show(); // Go back to the details form
+        });
+        
+        // Reset payment modal when it's hidden
+        paymentModalEl.addEventListener('hidden.bs.modal', () => {
+            slipUpload.value = '';
+            slipPreview.style.display = 'none';
+            verifySlipBtn.disabled = true;
+            paymentStatusText.textContent = '';
+            loadingSpinner.style.display = 'none';
+            tempReservationData = null; // Clear temporary data
+        });
+
+    </script>
+        <footer class="footer mt-auto py-3 bg-light">
+            <div class="container text-center">
+                <span class="text-muted">สำหรับผู้ดูแลระบบ: <a href="admin.php"
+                        class="btn btn-sm btn-outline-primary">จัดการการจอง</a></span>
+            </div>
+        </footer>
+    </body>
+</html>
