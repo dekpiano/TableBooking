@@ -3,7 +3,7 @@
 $servername = "localhost";
 $username = "root"; // เปลี่ยนเป็นชื่อผู้ใช้ฐานข้อมูลของคุณ
 $password = ""; // เปลี่ยนเป็นรหัสผ่านฐานข้อมูลของคุณ
-$dbname = "tb_bookings"; // เปลี่ยนเป็นชื่อฐานข้อมูลของคุณ
+$dbname = "skjacth_tablebooking"; // เปลี่ยนเป็นชื่อฐานข้อมูลของคุณ
 
 // สร้างการเชื่อมต่อ
 $conn = new mysqli($servername, $username, $password, $dbname);

@@ -1,10 +1,6 @@
 <?php
+session_start(); // Start session for messages
 include_once 'api/connectDB.php';
-
-// ตรวจสอบการเชื่อมต่อ (connectDB.php จะจัดการ error แล้ว)
-// if ($conn->connect_error) {
-//     die("Connection failed: " . $conn->connect_error);
-// }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST['name'];
@@ -14,7 +10,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $time = $_POST['time'];
     $guests = $_POST['guests'];
     $message = $_POST['message'];
+    $tableID = $_POST['TableID'] ?? '';
     $slip_path = NULL;
+
+    // Basic validation for TableID
+    if (empty($tableID)) {
+        $_SESSION['message'] = ['type' => 'error', 'text' => 'Error: TableID is required.'];
+        header("Location: index2.html");
+        exit();
+    }
 
     // จัดการการอัปโหลดสลิป
     if (isset($_FILES['slip']) && $_FILES['slip']['error'] == 0) {
@@ -29,23 +33,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (move_uploaded_file($_FILES["slip"]["tmp_name"], $target_file)) {
                 $slip_path = $target_file;
             } else {
-                echo "ขออภัย เกิดข้อผิดพลาดในการอัปโหลดไฟล์ของคุณ.";
+                $_SESSION['message'] = ['type' => 'error', 'text' => 'ขออภัย เกิดข้อผิดพลาดในการอัปโหลดไฟล์ของคุณ.'];
+                header("Location: index2.html");
+                exit();
             }
         } else {
-            echo "ขออภัย อนุญาตเฉพาะไฟล์ JPG, JPEG, PNG, GIF และ PDF เท่านั้น.";
+            $_SESSION['message'] = ['type' => 'error', 'text' => 'ขออภัย อนุญาตเฉพาะไฟล์ JPG, JPEG, PNG, GIF และ PDF เท่านั้น.'];
+            header("Location: index2.html");
+            exit();
         }
     }
 
-    // เตรียมและผูกพารามิเตอร์
-    $stmt = $conn->prepare("INSERT INTO bookings (name, email, phone, booking_date, booking_time, guests, message, slip_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssiss", $name, $email, $phone, $date, $time, $guests, $message, $slip_path);
+    // เตรียมและผูกพารามิเตอร์ (Added TableID)
+    $stmt = $conn->prepare("INSERT INTO bookings (name, email, phone, booking_date, booking_time, guests, message, TableID, slip_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssisss", $name, $email, $phone, $date, $time, $guests, $message, $tableID, $slip_path);
 
     // รันคำสั่ง
     if ($stmt->execute()) {
+        $_SESSION['message'] = ['type' => 'success', 'text' => 'การจองของคุณถูกส่งเรียบร้อยแล้ว!'];
         header("Location: index2.html");
         exit();
     } else {
-        echo "Error: " . $stmt->error;
+        $_SESSION['message'] = ['type' => 'error', 'text' => 'Error: ' . $stmt->error];
+        header("Location: index2.html");
+        exit();
     }
 
     $stmt->close();

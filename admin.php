@@ -10,11 +10,44 @@ if (!isset($_SESSION['admin_id'])) {
 
 $admin_name = $_SESSION['admin_name'];
 
+// Fetch all bookings to calculate stats and for the table
 $sql = "SELECT b.*, a.admin_name AS approver_name
         FROM bookings b
         LEFT JOIN tb_admins a ON b.approved_by_admin_id = a.admin_id
         ORDER BY b.created_at DESC";
 $result = $conn->query($sql);
+
+// Store all results in an array
+$bookings = $result->fetch_all(MYSQLI_ASSOC);
+
+// Calculate dashboard statistics
+$total_bookings = count($bookings);
+$pending_count = 0;
+$verified_count = 0;
+$rejected_count = 0;
+$total_income = 0;
+
+foreach ($bookings as $booking) {
+    switch ($booking['status']) {
+        case 'pending':
+            $pending_count++;
+            break;
+        case 'verified':
+            $verified_count++;
+            $total_income += $booking['payment_amount'];
+            break;
+        case 'rejected':
+            $rejected_count++;
+            break;
+    }
+}
+
+// Handle session messages for SweetAlert2
+$message = null;
+if (isset($_SESSION['message'])) {
+    $message = $_SESSION['message'];
+    unset($_SESSION['message']); // Clear the message after displaying
+}
 ?>
 
 <!DOCTYPE html>
@@ -77,6 +110,25 @@ $result = $conn->query($sql);
         .table-responsive {
             margin-top: 20px;
         }
+        .dashboard-card {
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .dashboard-card .card-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .dashboard-card .card-text {
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+        .dashboard-card .icon {
+            font-size: 3rem;
+            opacity: 0.5;
+        }
         /* Customizing DataTables for Bootstrap 5 */
         .dataTables_wrapper {
             font-size: 0.9rem;
@@ -110,11 +162,72 @@ $result = $conn->query($sql);
     <div class="container-fluid">
         <div class="container main-container">
             <div class="admin-header">
-                <h2><i class="bi bi-table"></i> การจองโต๊ะทั้งหมด</h2>
+                <h2><i class="bi bi-speedometer2"></i> สรุปข้อมูล (Dashboard)</h2>
                 <div>
                     <span class="me-3"><i class="bi bi-person-circle"></i> สวัสดี, <?php echo htmlspecialchars($admin_name); ?></span>
+                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addBookingModal"><i class="bi bi-plus-circle-fill"></i> เพิ่มการจองใหม่</button>
                     <a href="logout.php" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> ออกจากระบบ</a>
                 </div>
+            </div>
+
+            <!-- Dashboard Cards -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="dashboard-card bg-primary text-center">
+                        <div class="row">
+                            <div class="col-8 text-start">
+                                <div class="card-title">ยอดจองทั้งหมด</div>
+                                <div class="card-text"><?php echo $total_bookings; ?></div>
+                            </div>
+                            <div class="col-4 d-flex align-items-center justify-content-end">
+                                <i class="bi bi-journal-text icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="dashboard-card bg-warning text-dark text-center">
+                         <div class="row">
+                            <div class="col-8 text-start">
+                                <div class="card-title">รอตรวจสอบ</div>
+                                <div class="card-text"><?php echo $pending_count; ?></div>
+                            </div>
+                            <div class="col-4 d-flex align-items-center justify-content-end">
+                                <i class="bi bi-hourglass-split icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="dashboard-card bg-success text-center">
+                        <div class="row">
+                            <div class="col-8 text-start">
+                                <div class="card-title">อนุมัติแล้ว</div>
+                                <div class="card-text"><?php echo $verified_count; ?></div>
+                            </div>
+                            <div class="col-4 d-flex align-items-center justify-content-end">
+                                <i class="bi bi-check-circle-fill icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="dashboard-card bg-info text-center">
+                        <div class="row">
+                            <div class="col-8 text-start">
+                                <div class="card-title">ยอดรวม (บาท)</div>
+                                <div class="card-text"><?php echo number_format($total_income, 2); ?></div>
+                            </div>
+                            <div class="col-4 d-flex align-items-center justify-content-end">
+                                <i class="bi bi-cash-stack icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-header mt-5">
+                <h2><i class="bi bi-table"></i> การจองโต๊ะทั้งหมด</h2>
             </div>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover align-middle" id="bookingsTable">
@@ -136,8 +249,8 @@ $result = $conn->query($sql);
                     </thead>
                     <tbody>
                         <?php
-                        if ($result->num_rows > 0) {
-                            while($row = $result->fetch_assoc()) {
+                        if ($total_bookings > 0) {
+                            foreach($bookings as $row) {
                                 echo "<tr>";
                                 echo "<td>" . htmlspecialchars($row["id"]) . "</td>";
                                 echo "<td>" . htmlspecialchars($row["TableID"]) . "</td>";
@@ -193,6 +306,48 @@ $result = $conn->query($sql);
         </div>
     </div>
 
+    <!-- Add Booking Modal -->
+    <div class="modal fade" id="addBookingModal" tabindex="-1" aria-labelledby="addBookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addBookingModalLabel">เพิ่มการจองใหม่</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addBookingForm" action="add_booking.php" method="POST">
+                        <div class="mb-3">
+                            <label for="TableID" class="form-label">หมายเลขโต๊ะ</label>
+                            <select class="form-select" id="TableID" name="TableID" required>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">ชื่อ</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lastName" class="form-label">นามสกุล</label>
+                            <input type="text" class="form-control" id="lastName" name="lastName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">เบอร์โทร</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="payment_amount" class="form-label">จำนวนเงิน</label>
+                            <input type="number" class="form-control" id="payment_amount" name="payment_amount" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                            <button type="submit" class="btn btn-primary">บันทึกการจอง</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap 5 JS -->
@@ -214,9 +369,42 @@ $result = $conn->query($sql);
                 "responsive": true,
                 "autoWidth": false
             });
+
+            // Event listener for when the modal is about to be shown
+            document.getElementById('addBookingModal').addEventListener('show.bs.modal', async function () {
+                const selectTable = document.getElementById('TableID');
+                // Clear existing options
+                selectTable.innerHTML = '<option value="">กำลังโหลดโต๊ะที่ว่าง...</option>';
+                
+                const availableTables = await getAvailableTables();
+                
+                // Clear loading text
+                selectTable.innerHTML = '';
+
+                if (availableTables.length > 0) {
+                    availableTables.forEach(table => {
+                        const option = document.createElement('option');
+                        option.value = table;
+                        option.textContent = table;
+                        selectTable.appendChild(option);
+                    });
+                } else {
+                    selectTable.innerHTML = '<option value="">ไม่มีโต๊ะว่าง</option>';
+                }
+            });
+
+            // Display SweetAlert2 messages if they exist
+            <?php if ($message): ?>
+                Swal.fire({
+                    icon: '<?php echo $message['type']; ?>',
+                    title: '<?php echo $message['text']; ?>',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+            <?php endif; ?>
         });
 
-        async function getAvailableTables(currentTableId) {
+        async function getAvailableTables(currentTableId = null) {
             try {
                 const response = await fetch(API_GET_RESERVATIONS);
                 if (!response.ok) throw new Error('Could not fetch reservations.');
