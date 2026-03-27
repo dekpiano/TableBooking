@@ -19,6 +19,25 @@ try {
         $transferDate = $_POST['transferDate'] ?? NULL;
         $transferTime = $_POST['transferTime'] ?? NULL;
 
+        // 1. ตรวจสอบว่าโต๊ะถูกปิดหรือซ่อนหรือไม่
+        $checkConfigSql = "SELECT status FROM tb_tables_config WHERE table_id = '$tableId'";
+        $configResult = $conn->query($checkConfigSql);
+        if ($configResult && $configResult->num_rows > 0) {
+            $config = $configResult->fetch_assoc();
+            if ($config['status'] === 'blocked_visible' || $config['status'] === 'blocked_hidden') {
+                echo json_encode(['success' => false, 'message' => 'ขออภัย โต๊ะนี้ถูกปิดระบบการจอง หรือซ่อนโดยผู้ดูแลระบบ.']);
+                exit();
+            }
+        }
+
+        // 2. ตรวจสอบว่ามีการจองที่อยู่ระหว่างรอดำเนินการหรือยืนยันแล้วหรือไม่
+        $checkBookingSql = "SELECT id FROM bookings WHERE TableID = '$tableId' AND (status = 'pending' OR status = 'verified')";
+        $bookingResult = $conn->query($checkBookingSql);
+        if ($bookingResult && $bookingResult->num_rows > 0) {
+            echo json_encode(['success' => false, 'message' => 'ขออภัย โต๊ะนี้ถูกจองไปแล้ว หรือกำลังรอการตรวจสอบ.']);
+            exit();
+        }
+
         $slip_path = NULL;
 
         // จัดการการอัปโหลดสลิป

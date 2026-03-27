@@ -1,0 +1,18 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8099:80"
+    environment:
+      - DB_HOST=skj2025_db
+      - DB_USER=root
+      - DB_PASS=rootpassword
+      - DB_NAME=skjacth_tablebooking
+    volumes:
+      - .:/var/www/html
+    networks:
+      - skj2025_default
+
+networks:
+  skj2025_default:
+    external: true

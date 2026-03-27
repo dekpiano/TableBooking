@@ -152,6 +152,79 @@ if (isset($_SESSION['message'])) {
         .action-buttons a {
             margin: 0 2px;
         }
+
+        /* --- Table Grid Styles for Admin Modal --- */
+        .table-grid-section {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr) 0.5fr 1fr 0.5fr repeat(10, 1fr);
+            gap: 4px;
+            margin-bottom: 5px;
+        }
+        .walkway-column {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+            font-weight: bold;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            white-space: nowrap;
+            font-size: 10px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+        .walkway-row {
+            padding: 4px 0;
+            margin: 5px 0;
+            background-color: rgba(0, 0, 0, 0.1);
+            color: #555;
+            font-weight: bold;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+            width: 100%;
+        }
+        .admin-table-item {
+            aspect-ratio: 1/1;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 1px solid #ddd;
+            font-size: 10px;
+            cursor: default;
+            position: relative;
+            padding: 2px;
+        }
+        .admin-table-item.square {
+            border-radius: 4px;
+        }
+        .admin-table-item span {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .admin-table-item select {
+            font-size: 9px;
+            padding: 0 2px;
+            width: 90%;
+            height: 18px;
+        }
+        .admin-table-item.reserved {
+            background-color: #ffebee;
+            border-color: #ffcdd2;
+        }
+        .admin-table-item.blocked-v {
+            background-color: #fff3e0;
+            border-color: #ffe0b2;
+        }
+        .admin-table-item.blocked-h {
+            background-color: #f5f5f5;
+            border-color: #e0e0e0;
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
@@ -165,6 +238,8 @@ if (isset($_SESSION['message'])) {
                 <h2><i class="bi bi-speedometer2"></i> สรุปข้อมูล (Dashboard)</h2>
                 <div>
                     <span class="me-3"><i class="bi bi-person-circle"></i> สวัสดี, <?php echo htmlspecialchars($admin_name); ?></span>
+                    <a href="admin_luckydraw.php" class="btn btn-info btn-sm text-white"><i class="bi bi-gift-fill text-white"></i> ระบบจับรางวัล</a>
+                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#manageTableStatusModal"><i class="bi bi-slash-circle text-white"></i> จัดการสถานะโต๊ะ</button>
                     <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addBookingModal"><i class="bi bi-plus-circle-fill"></i> เพิ่มการจองใหม่</button>
                     <a href="logout.php" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> ออกจากระบบ</a>
                 </div>
@@ -343,6 +418,32 @@ if (isset($_SESSION['message'])) {
                             <button type="submit" class="btn btn-primary">บันทึกการจอง</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Table Status Modal -->
+    <div class="modal fade" id="manageTableStatusModal" tabindex="-1" aria-labelledby="manageTableStatusModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="manageTableStatusModalLabel"><i class="bi bi-grid-3x3-gap"></i> จัดการสถานะการเปิด/ปิดโต๊ะ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3"><i class="bi bi-info-circle"></i> คุณสามารถตั้งค่าโต๊ะที่จะไม่ให้ใครกดจอง (แบบเห็นแต่กดไม่ได้) หรือซ่อนโต๊ะไม่ให้ใครเห็นเลย (เพื่อจองให้ผู้ใหญ่/VIP)</p>
+                    <div id="tableStatusGrid" class="p-3 bg-white rounded border overflow-auto" style="min-width: 900px;">
+                        <!-- Table status grid will be populated by JS -->
+                        <div class="text-center w-100 py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">กำลังโหลด...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
                 </div>
             </div>
         </div>
@@ -576,33 +677,173 @@ if (isset($_SESSION['message'])) {
             })
         }
 
-        function confirmUpdateStatus(id, status) {
-            let statusText = '';
-            let confirmButtonText = '';
-            let titleText = 'คุณแน่ใจหรือไม่?';
+        // --- MANAGE TABLE STATUS LOGIC ---
+        const manageTableStatusModal = document.getElementById('manageTableStatusModal');
+        const tableStatusGrid = document.getElementById('tableStatusGrid');
 
-            if (status === 'verified') {
-                statusText = 'คุณต้องการอนุมัติรายการนี้ใช่หรือไม่?';
-                confirmButtonText = 'ใช่, อนุมัติเลย!';
-            } else if (status === 'pending') {
-                statusText = 'คุณต้องการยกเลิกการอนุมัติรายการนี้ใช่หรือไม่?';
-                confirmButtonText = 'ใช่, ยกเลิก!';
-            }
+        manageTableStatusModal.addEventListener('show.bs.modal', async function () {
+            await loadTableStatuses();
+        });
 
-            Swal.fire({
-                title: titleText,
-                text: statusText,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: confirmButtonText,
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = `update_status.php?id=${id}&status=${status}`;
+        async function loadTableStatuses() {
+            try {
+                tableStatusGrid.innerHTML = `
+                    <div class="text-center w-100 py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">กำลังโหลด...</span>
+                        </div>
+                    </div>`;
+
+                const [reservationsRes, tableStatusRes] = await Promise.all([
+                    fetch(API_GET_RESERVATIONS),
+                    fetch('api/get_table_status.php')
+                ]);
+
+                const reservations = await reservationsRes.json();
+                const tableStatuses = await tableStatusRes.json();
+
+                const reservedTables = (reservations.success && Array.isArray(reservations.data)) 
+                    ? reservations.data.map(r => r.TableID) 
+                    : [];
+                
+                const statusMap = {};
+                if (tableStatuses.success && Array.isArray(tableStatuses.data)) {
+                    tableStatuses.data.forEach(item => {
+                        statusMap[item.table_id] = item.status;
+                    });
                 }
-            })
+
+                tableStatusGrid.innerHTML = '';
+                
+                const walkwayAfterRow1 = 5;
+                const walkwayAfterRow2 = 10;
+                const walkwayAfterCol_IJ = 9;  // After 'I'
+                
+                // Helper to create grid section
+                const createGridSection = (startRowIndex, endRowIndex, hasIJWalkway) => {
+                    const grid = document.createElement('div');
+                    grid.className = 'table-grid-section';
+                    if (!hasIJWalkway) {
+                        grid.style.gridTemplateColumns = 'repeat(9, 1fr) 1fr 0.5fr repeat(10, 1fr)';
+                    }
+
+                    const middleRowInSection = startRowIndex + Math.floor((endRowIndex - startRowIndex) / 2);
+
+                    for (let i = startRowIndex; i < endRowIndex; i++) {
+                        const rowNum = 1 + i;
+                        
+                        // Columns A-I
+                        for (let j = 0; j < walkwayAfterCol_IJ; j++) {
+                            const colChar = String.fromCharCode('A'.charCodeAt(0) + j);
+                            grid.appendChild(createTableAdminCell(colChar, rowNum, statusMap, reservedTables));
+                        }
+
+                        // I-J Walkway
+                        if (hasIJWalkway) {
+                            const w = document.createElement('div');
+                            w.className = 'walkway-column';
+                            if (i === middleRowInSection) w.textContent = 'ทางเดิน';
+                            grid.appendChild(w);
+                        }
+
+                        // Column J
+                        const colCharJ = String.fromCharCode('A'.charCodeAt(0) + walkwayAfterCol_IJ);
+                        grid.appendChild(createTableAdminCell(colCharJ, rowNum, statusMap, reservedTables));
+
+                        // J-K Walkway
+                        const wJK = document.createElement('div');
+                        wJK.className = 'walkway-column';
+                        if (i === middleRowInSection) wJK.textContent = 'ทางเดิน';
+                        grid.appendChild(wJK);
+
+                        // Columns K-T
+                        for (let j = 11; j <= 20; j++) {
+                            const colChar = String.fromCharCode('A'.charCodeAt(0) + j - 1);
+                            grid.appendChild(createTableAdminCell(colChar, rowNum, statusMap, reservedTables));
+                        }
+                    }
+                    return grid;
+                };
+
+                const createTableAdminCell = (colChar, rowNum, statusMap, reservedTables) => {
+                    const tableId = `${colChar}${rowNum}`;
+                    const currentStatus = statusMap[tableId] || 'available';
+                    const isReserved = reservedTables.includes(tableId);
+                    
+                    const div = document.createElement('div');
+                    div.className = 'admin-table-item';
+                    if (isReserved) div.classList.add('reserved');
+                    if (currentStatus === 'blocked_visible') div.classList.add('blocked-v');
+                    if (currentStatus === 'blocked_hidden') div.classList.add('blocked-h');
+                    
+                    // Square tables check (K1-2, J1-10)
+                    if ((colChar === 'K' && (rowNum >= 1 && rowNum <= 2)) ||
+                        (colChar === 'J' && (rowNum >= 1 && rowNum <= 10))) {
+                        div.classList.add('square');
+                    }
+
+                    let statusBadge = '';
+                    if (isReserved) {
+                        statusBadge = '<span class="text-danger fw-bold" style="font-size:8px;">จองแล้ว</span>';
+                    } else {
+                        statusBadge = `
+                            <select class="form-select status-select" data-table-id="${tableId}" onchange="updateTableStatus('${tableId}', this.value)">
+                                <option value="available" ${currentStatus === 'available' ? 'selected' : ''}>🟢 เปิด</option>
+                                <option value="blocked_visible" ${currentStatus === 'blocked_visible' ? 'selected' : ''}>🟡 ปิด</option>
+                                <option value="blocked_hidden" ${currentStatus === 'blocked_hidden' ? 'selected' : ''}>🔴 ซ่อน</option>
+                            </select>
+                        `;
+                    }
+
+                    div.innerHTML = `<span>${tableId}</span>${statusBadge}`;
+                    return div;
+                }
+
+                const createWalkwayRow = (text) => {
+                    const row = document.createElement('div');
+                    row.className = 'walkway-row';
+                    row.textContent = text;
+                    return row;
+                };
+
+                // Assemble sections
+                tableStatusGrid.appendChild(createGridSection(0, walkwayAfterRow1, true));
+                tableStatusGrid.appendChild(createWalkwayRow('----------- ทางเดินกลาง -----------'));
+                tableStatusGrid.appendChild(createGridSection(walkwayAfterRow1, walkwayAfterRow2, true));
+                tableStatusGrid.appendChild(createWalkwayRow('----------- ทางเดินหลัง -----------'));
+                tableStatusGrid.appendChild(createGridSection(walkwayAfterRow2, 15, false));
+
+            } catch (error) {
+                console.error("Error loading table statuses:", error);
+                tableStatusGrid.innerHTML = `<div class="alert alert-danger w-100">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>`;
+            }
+        }
+
+        async function updateTableStatus(tableId, newStatus) {
+            try {
+                const formData = new FormData();
+                formData.append('table_id', tableId);
+                formData.append('status', newStatus);
+
+                const response = await fetch('api/update_table_status.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || 'เกิดข้อผิดพลาดในการอัปเดต');
+                }
+                
+                // Optional: Show a small toast notification instead of a full Swal
+                console.log(`Updated table ${tableId} to ${newStatus}`);
+                
+            } catch (error) {
+                Swal.fire('เกิดข้อผิดพลาด', error.message, 'error');
+                // Reload the modal content to revert changes on failure
+                loadTableStatuses();
+            }
         }
     </script>
 </body>

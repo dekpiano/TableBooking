@@ -1,9 +1,9 @@
 <?php
 
-$servername = "localhost";
-$username = "root"; // เปลี่ยนเป็นชื่อผู้ใช้ฐานข้อมูลของคุณ
-$password = ""; // เปลี่ยนเป็นรหัสผ่านฐานข้อมูลของคุณ
-$dbname = "skjacth_tablebooking"; // เปลี่ยนเป็นชื่อฐานข้อมูลของคุณ
+$servername = getenv('DB_HOST') ?: "localhost";
+$username = getenv('DB_USER') ?: "root";
+$password = getenv('DB_PASS') ?: ""; 
+$dbname = getenv('DB_NAME') ?: "skjacth_tablebooking";
 
 // สร้างการเชื่อมต่อ
 $conn = new mysqli($servername, $username, $password, $dbname);

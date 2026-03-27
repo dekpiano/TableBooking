@@ -245,6 +245,28 @@
             /* สีส้มอ่อนลงเมื่อ hover */
         }
 
+        .table-item.blocked {
+            background-color: #6c757d !important; /* Grey for blocked */
+            border-color: #495057;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .table-item.blocked span {
+            color: white !important;
+            text-shadow: none !important;
+        }
+
+        .table-item.blocked:hover {
+            transform: none;
+            background-color: #6c757d !important;
+        }
+
+        .table-item.hidden {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
         .reserved-label {
             display: none;
             /* Hide the reserved label */
@@ -329,6 +351,11 @@
         .legend-dot.reserved {
             background-color: #dc3545;
             border: 1px solid #b02a37;
+        }
+
+        .legend-dot.blocked {
+            background-color: #6c757d;
+            border: 1px solid #495057;
         }
 
          .table-item.square-table {
@@ -519,6 +546,9 @@
             ปี แห่งความภาคภูมิใจ<br>
             ณ สนามฟุตบอล โรงเรียนสวนกุหลาบวิทยาลัย (จิรประวัติ) นครสวรรค์
         </p>
+        <div class="mt-3">
+            <a href="evaluation.php" class="btn btn-warning fw-bold px-4 py-2 rounded-pill shadow-sm"><i class="bi bi-clipboard2-check-fill"></i> ทำแบบประเมินความพึงพอใจ (ลุ้นรางวัล Lucky Draw)</a>
+        </div>
 
     </header>
 
@@ -559,6 +589,10 @@
                 <div class="d-flex align-items-center">
                     <div class="legend-dot reserved"></div>
                     <span class="ms-2">จองแล้ว</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="legend-dot blocked"></div>
+                    <span class="ms-2">ปิดจอง</span>
                 </div>
             </div>
 
@@ -679,6 +713,7 @@
     <script>
         // --- GLOBAL STATE ---
         let allReservations = [];
+        let allTableConfigs = [];
         let tempReservationData = null; // To hold form data between reservation and payment steps
 
         // --- DOM ELEMENTS & BOOTSTRAP MODALS ---
@@ -834,16 +869,33 @@
             updateTableStatus();
         }
 
-        // 2. Update table status (reserved/pending/available)
+        // 2. Update table status (reserved/pending/available/blocked)
         function updateTableStatus() {
             // First, reset all tables to their default available state
             document.querySelectorAll('.table-item').forEach(table => {
-                table.classList.remove('reserved', 'pending');
+                table.classList.remove('reserved', 'pending', 'blocked', 'hidden');
+                table.style.display = '';
                 const oldLabel = table.querySelector('.reserved-label');
                 if (oldLabel) oldLabel.remove();
             });
 
-            // Then, apply the correct status based on fetched data
+            // Apply table configurations (blocked/hidden)
+            allTableConfigs.forEach(conf => {
+                const tableElement = document.getElementById(conf.table_id);
+                if (tableElement) {
+                    if (conf.status === 'blocked_visible') {
+                        tableElement.classList.add('blocked');
+                        const label = document.createElement('div');
+                        label.className = 'reserved-label';
+                        label.textContent = 'ไม่เปิดจอง';
+                        tableElement.appendChild(label);
+                    } else if (conf.status === 'blocked_hidden') {
+                        tableElement.classList.add('hidden');
+                    }
+                }
+            });
+
+            // Then, apply the correct reservation status (verified/pending)
             allReservations.forEach(res => {
                 const tableElement = document.getElementById(res.TableID);
                 if (tableElement) {
@@ -868,6 +920,17 @@
             const tableElement = document.getElementById(tableId);
             const isReserved = tableElement && tableElement.classList.contains('reserved');
             const isPending = tableElement && tableElement.classList.contains('pending');
+            const isBlocked = tableElement && tableElement.classList.contains('blocked');
+
+            if (isBlocked) {
+                Swal.fire({
+                    title: 'โต๊ะปิดจอง',
+                    text: 'โต๊ะนี้ถูกปิดระบบการจอง โดยผู้ดูแลระบบ',
+                    icon: 'warning',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
 
             if (isReserved || isPending) {
                 const reservation = allReservations.find(res => res.TableID === tableId);
@@ -996,18 +1059,25 @@
         // Function for silent background updates
         async function fetchAndUpdate() {
             try {
-                const response = await fetch(API_GET_RESERVATIONS);
-                if (!response.ok) {
+                const [resResponse, configResponse] = await Promise.all([
+                    fetch(API_GET_RESERVATIONS),
+                    fetch('api/get_table_status.php')
+                ]);
+                
+                if (!resResponse.ok || !configResponse.ok) {
                     console.error('Polling Error: Could not connect to the server.');
                     return; // Fail silently
                 }
 
-                const result = await response.json();
-                if (result.success) {
-                    allReservations = Array.isArray(result.data) ? result.data : [];
+                const resResult = await resResponse.json();
+                const configResult = await configResponse.json();
+
+                if (resResult.success && configResult.success) {
+                    allReservations = Array.isArray(resResult.data) ? resResult.data : [];
+                    allTableConfigs = Array.isArray(configResult.data) ? configResult.data : [];
                     updateTableStatus();
                 } else {
-                    console.error('Polling Error:', result.message || 'Failed to load data.');
+                    console.error('Polling Error: Failed to load data.');
                 }
             } catch (error) {
                 console.error('Polling Error:', error.message);
@@ -1026,19 +1096,26 @@
                 createTableLayout(layoutConfig); // Create layout first
 
                 // Perform the first fetch and show errors to the user
-                const response = await fetch(API_GET_RESERVATIONS);
-                if (!response.ok) throw new Error('Could not connect to the server.');
+                const [resResponse, configResponse] = await Promise.all([
+                    fetch(API_GET_RESERVATIONS),
+                    fetch('api/get_table_status.php')
+                ]);
 
-                const result = await response.json();
-                if (result.success) {
-                    allReservations = Array.isArray(result.data) ? result.data : [];
+                if (!resResponse.ok || !configResponse.ok) throw new Error('Could not connect to the server.');
+
+                const resResult = await resResponse.json();
+                const configResult = await configResponse.json();
+
+                if (resResult.success && configResult.success) {
+                    allReservations = Array.isArray(resResult.data) ? resResult.data : [];
+                    allTableConfigs = Array.isArray(configResult.data) ? configResult.data : [];
                     updateTableStatus();
 
                     // If initial load is successful, start polling
                     setInterval(fetchAndUpdate, 30000); // Poll every 30 seconds
 
                 } else {
-                    throw new Error(result.message || 'Failed to load data.');
+                    throw new Error('Failed to load initial data.');
                 }
             } catch (error) {
                 showMessage(`เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}`, false);
