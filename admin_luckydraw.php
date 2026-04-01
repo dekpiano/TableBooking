@@ -173,6 +173,9 @@ $admin_name = $_SESSION['admin_name'];
             <div>
                 <span class="stats-badge">จำนวนผู้ร่วมกิจกรรม: <span id="totalParticipants">0</span></span>
                 <span class="stats-badge">ผู้ได้รับรางวัลไปแล้ว: <span id="winnersCount">0</span></span>
+                <button class="btn btn-outline-danger btn-sm rounded-pill ms-3" onclick="confirmResetLuckydraw()">
+                    <i class="bi bi-trash3-fill"></i> รีเซ็ตตัวเลข/ชื่อทั้งหมด
+                </button>
             </div>
         </div>
 
@@ -193,9 +196,7 @@ $admin_name = $_SESSION['admin_name'];
                     <button id="btnStart" class="btn btn-draw-main" onclick="startDraw()">
                         <i class="bi bi-play-circle-fill"></i> เริ่มหมุนวงล้อ
                     </button>
-                    <button id="btnStop" class="btn btn-danger btn-lg rounded-pill px-5 shadow" onclick="stopDraw()" style="display:none; font-size: 2rem; padding: 1rem 4rem;">
-                        <i class="bi bi-stop-circle-fill"></i> หยุดสุ่ม!
-                    </button>
+                    <div id="drawTimerDisplay" class="mt-3 text-white-50" style="display:none;">กำลังสุ่ม... กรุณารอสักครู่ (5 วินาที)</div>
                 </div>
             </div>
 
@@ -214,8 +215,18 @@ $admin_name = $_SESSION['admin_name'];
                     <div class="digit-box winner" id="wd6">0</div>
                 </div>
 
-                <h2 id="winnerName">---</h2>
-                <p class="text-white-50 fs-3" id="winnerPhone"></p>
+                <div id="winnerPhoneDisplay" class="text-white-50 fs-3 mb-2">---</div>
+
+                <div id="winnerDetails" style="display:none;">
+                    <h2 id="winnerName" class="text-warning display-4 mb-2">---</h2>
+                </div>
+
+                <div id="winnerDetailsHidden" class="mb-4">
+                    <button id="btnReveal" class="btn btn-warning btn-lg px-5 rounded-pill shadow-lg" onclick="revealWinnerDetails()" style="font-size: 1.5rem;">
+                        <i class="bi bi-person-bounding-box"></i> เฉลยชื่อผู้โชคดี!
+                    </button>
+                    <p class="mt-3 text-white-50">ใครเป็นเจ้าของเบอร์นี้? รอลุ้นชื่อกันเลย!</p>
+                </div>
                 
                 <div class="mt-5 d-flex justify-content-center gap-3">
                     <button class="btn btn-success btn-lg px-5 rounded-pill shadow" onclick="saveCurrentWinner()">
@@ -304,13 +315,19 @@ $admin_name = $_SESSION['admin_name'];
 
             isDrawing = true;
             document.getElementById('btnStart').style.display = 'none';
-            document.getElementById('btnStop').style.display = 'inline-block';
+            document.getElementById('drawTimerDisplay').style.display = 'block';
 
             drawInterval = setInterval(() => {
                 for (let i = 1; i <= 6; i++) {
                     document.getElementById('d' + i).innerText = Math.floor(Math.random() * 10);
                 }
             }, 60);
+
+            // Auto stop after 5 seconds
+            setTimeout(() => {
+                stopDraw();
+                document.getElementById('drawTimerDisplay').style.display = 'none';
+            }, 5000);
         }
 
         function stopDraw() {
@@ -321,55 +338,54 @@ $admin_name = $_SESSION['admin_name'];
             const winnerIdx = Math.floor(Math.random() * drawPool.length);
             currentWinner = drawPool[winnerIdx];
 
-            // Show blank/dash for all boxes first for suspense
-            for (let i = 1; i <= 6; i++) {
-                document.getElementById('d' + i).innerText = '-';
-                document.getElementById('d' + i).classList.remove('winner');
-            }
-
-            // Start gradual reveal after a short delay
-            setTimeout(() => {
-                revealWinnerCode(currentWinner.lucky_code);
-            }, 800);
+            // Immediately start reveal without resetting to '-'
+            revealWinnerCode(currentWinner.lucky_code);
         }
 
         function revealWinnerCode(code) {
             const digits = code.toString().padStart(6, '0').split('');
             let revealedCount = 0;
 
+            // Start individual spin intervals for boxes that haven't stopped yet
+            const individualIntervals = [];
+            for (let i = 1; i <= 6; i++) {
+                const box = document.getElementById('d' + i);
+                const interval = setInterval(() => {
+                    box.innerText = Math.floor(Math.random() * 10);
+                }, 50 + (i * 10)); // Variable speed for natural effect
+                individualIntervals.push(interval);
+            }
+
+            // Reveal digits one by one
             const revealInterval = setInterval(() => {
                 revealedCount++;
                 const box = document.getElementById('d' + revealedCount);
                 
-                // Optional: Add a quick "rolling" effect for this specific box before locking
-                let rollCount = 0;
-                const rollTimer = setInterval(() => {
-                    box.innerText = Math.floor(Math.random() * 10);
-                    rollCount++;
-                    if (rollCount > 5) {
-                        clearInterval(rollTimer);
-                        box.innerText = digits[revealedCount - 1];
-                        box.classList.add('winner');
-                        
-                        // If last digit is revealed
-                        if (revealedCount === 6) {
-                            setTimeout(showWinner, 1200);
-                        }
-                    }
-                }, 80);
-
+                // Stop the individual spin for this box
+                clearInterval(individualIntervals[revealedCount - 1]);
+                
+                // Set the real digit and mark as winner
+                box.innerText = digits[revealedCount - 1];
+                box.classList.add('winner');
+                
+                // If last digit is revealed
                 if (revealedCount === 6) {
                     clearInterval(revealInterval);
+                    setTimeout(showWinner, 1200);
                 }
-            }, 600); // 0.6s gap between each digit reveal
+            }, 800); // Reveal each digit every 0.8s
         }
 
         function showWinner() {
             document.getElementById('drawView').style.display = 'none';
             document.getElementById('winnerView').style.display = 'block';
             
+            // Hide real details first for suspense
+            document.getElementById('winnerDetails').style.display = 'none';
+            document.getElementById('winnerDetailsHidden').style.display = 'block';
+
             document.getElementById('winnerName').innerText = currentWinner.full_name;
-            document.getElementById('winnerPhone').innerText = currentWinner.phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-XXX-$3');
+            document.getElementById('winnerPhoneDisplay').innerText = currentWinner.phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-XXX-$3');
             
             const digits = currentWinner.lucky_code.toString().padStart(6, '0').split('');
             for (let i = 1; i <= 6; i++) {
@@ -380,6 +396,19 @@ $admin_name = $_SESSION['admin_name'];
                 particleCount: 150,
                 spread: 70,
                 origin: { y: 0.6 }
+            });
+        }
+
+        function revealWinnerDetails() {
+            document.getElementById('winnerDetails').style.display = 'block';
+            document.getElementById('winnerDetailsHidden').style.display = 'none';
+            
+            // Extra confetti on reveal!
+            confetti({
+                particleCount: 100,
+                spread: 80,
+                origin: { y: 0.7 },
+                colors: ['#ffc107', '#ffffff']
             });
         }
 
@@ -410,6 +439,49 @@ $admin_name = $_SESSION['admin_name'];
             if (result.success) {
                 Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500, showConfirmButton: false });
                 resetDraw();
+            }
+        }
+
+        async function confirmResetLuckydraw() {
+            const { isConfirmed } = await Swal.fire({
+                title: 'ยืนยันการรีเซ็ต?',
+                text: "รายชื่อผู้ร่วมสนุกและผู้ได้รับรางวัลทั้งหมดจะถูกลบออก เพื่อเริ่มงานใหม่ครั้งต่อไป!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, รีเซ็ตเลย!',
+                cancelButtonText: 'ยกเลิก'
+            });
+
+            if (isConfirmed) {
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'reset_luckydraw');
+
+                    const response = await fetch('api/reset_system.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'เรียบร้อย!',
+                            text: result.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    Swal.fire('เกิดข้อผิดพลาด', error.message, 'error');
+                }
             }
         }
 

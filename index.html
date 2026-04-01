@@ -535,6 +535,143 @@
 
 
         }
+
+        /* --- Search Bar Styles --- */
+        .search-container {
+            max-width: 400px;
+            margin: 0 1rem 1rem auto;
+            position: relative;
+            z-index: 100;
+            padding: 0;
+        }
+
+        .search-input-group {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 5px 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .search-input-group:focus-within {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateY(-2px);
+        }
+
+        .search-input {
+            border: none;
+            background: transparent;
+            padding: 10px 15px;
+            width: 100%;
+            font-size: 1rem;
+            outline: none;
+            color: #333;
+        }
+
+        .search-icon {
+            color: #0d6efd;
+            font-size: 1.2rem;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 1rem;
+            right: 1rem;
+            background: white;
+            border-radius: 15px;
+            margin-top: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+            border: 1px solid #eee;
+        }
+
+        .search-result-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .search-result-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-result-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .search-result-phone {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .search-result-table {
+            background: #0d6efd;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .highlight-table {
+            animation: pulse-highlight 2s infinite;
+            z-index: 100 !important;
+        }
+
+        @keyframes pulse-highlight {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7); }
+            50% { transform: scale(1.2); box-shadow: 0 0 0 15px rgba(13, 110, 253, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+        }
+        @media (max-width: 768px) {
+            .search-container {
+                max-width: 100%;
+                margin: 0 0 1.5rem 0;
+            }
+            .search-input {
+                font-size: 0.9rem;
+                padding: 6px 10px;
+            }
+            .search-input-group {
+                padding: 4px 12px;
+            }
+            .search-icon {
+                width: 16px;
+                height: 16px;
+            }
+            .header-banner .btn-warning {
+                width: 100%;
+                font-size: 0.8rem;
+                white-space: nowrap;
+                letter-spacing: -0.5px;
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+                border-radius: 12px !important;
+            }
+        }
     </style>
 </head>
 
@@ -546,7 +683,7 @@
             ปี แห่งความภาคภูมิใจ<br>
             ณ สนามฟุตบอล โรงเรียนสวนกุหลาบวิทยาลัย (จิรประวัติ) นครสวรรค์
         </p>
-        <div class="mt-3">
+        <div class="mt-3 px-2">
             <a href="evaluation.php" class="btn btn-warning fw-bold px-4 py-2 rounded-pill shadow-sm"><i class="bi bi-clipboard2-check-fill"></i> ทำแบบประเมินความพึงพอใจ (ลุ้นรางวัล Lucky Draw)</a>
         </div>
 
@@ -558,6 +695,17 @@
             <div class="stage-backdrop"></div>
             <img id="stageImage" src="stage.png" alt="เวทีคอนเสิร์ต" class="img-fluid">
 
+        </div>
+
+        <div class="search-container">
+            <div class="search-input-group">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search search-icon me-2" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+                <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาโต๊ะ (ชื่อ/เบอร์โทร)..." autocomplete="off">
+                <button type="button" id="clearSearch" class="btn-close" style="display:none; font-size: 0.8rem;" aria-label="Close"></button>
+            </div>
+            <div id="searchResults" class="search-results"></div>
         </div>
 
         <!-- ส่วนสำหรับแสดงแผนผังโต๊ะ -->
@@ -715,6 +863,7 @@
         let allReservations = [];
         let allTableConfigs = [];
         let tempReservationData = null; // To hold form data between reservation and payment steps
+        let bookingMode = 'open'; // 'open' for booking, 'closed' for info only
 
         // --- DOM ELEMENTS & BOOTSTRAP MODALS ---
         const tableLayout = document.getElementById('tableLayout');
@@ -922,6 +1071,34 @@
             const isPending = tableElement && tableElement.classList.contains('pending');
             const isBlocked = tableElement && tableElement.classList.contains('blocked');
 
+            // Find reservation if any
+            const reservation = allReservations.find(res => res.TableID === tableId);
+
+            // If in CLOSED mode, always show info (if booked) or say not booked
+            if (bookingMode === 'closed') {
+                if (reservation && (isReserved || isPending)) {
+                    const noData = '<span class="text-muted">ไม่ได้กรอกข้อมูลมา</span>';
+                    Swal.fire({
+                        title: `ข้อมูลผู้จองโต๊ะ ${tableId}`,
+                        html: `<div style="text-align: left; padding: 0 1rem; line-height: 2;">
+                                <p style="margin: 0; border-bottom: 1px solid #eee; padding: 5px 0;"><strong>ชื่อ-นามสกุล:</strong> ${reservation.name || noData} ${reservation.lastName || ''}</p>
+                                <p style="margin: 0; border-bottom: 1px solid #eee; padding: 5px 0;"><strong>โต๊ะที่จอง:</strong> ${tableId}</p>
+                                <p style="margin: 0; border-bottom: 1px solid #eee; padding: 5px 0;"><strong>เบอร์โทรศัพท์:</strong> ${reservation.phone || noData}</p>
+                                <p style="margin: 0; border-bottom: 1px solid #eee; padding: 5px 0;"><strong>รุ่น:</strong> ${reservation.batch || noData}</p>
+                                <p style="margin: 0; border-bottom: 1px solid #eee; padding: 5px 0;"><strong>ปีที่จบ:</strong> ${reservation.gradYear || noData}</p>
+                               </div>`,
+                        icon: 'info',
+                        confirmButtonText: 'ตกลง'
+                    });
+                } else if (isBlocked) {
+                    Swal.fire('แจ้งเตือน', 'โต๊ะนี้ไม่เปิดให้จอง', 'warning');
+                } else {
+                    Swal.fire('ข้อมูลโต๊ะ', `โต๊ะ ${tableId} ยังไม่มีผู้จอง`, 'info');
+                }
+                return;
+            }
+
+            // Normal Booking Mode Logic
             if (isBlocked) {
                 Swal.fire({
                     title: 'โต๊ะปิดจอง',
@@ -933,7 +1110,6 @@
             }
 
             if (isReserved || isPending) {
-                const reservation = allReservations.find(res => res.TableID === tableId);
                 if (reservation) {
                     let statusText = '';
                     let statusColor = '';
@@ -1059,22 +1235,29 @@
         // Function for silent background updates
         async function fetchAndUpdate() {
             try {
-                const [resResponse, configResponse] = await Promise.all([
+                const [resResponse, configResponse, settingsResponse] = await Promise.all([
                     fetch(API_GET_RESERVATIONS),
-                    fetch('api/get_table_status.php')
+                    fetch('api/get_table_status.php'),
+                    fetch('api/get_system_settings.php')
                 ]);
                 
-                if (!resResponse.ok || !configResponse.ok) {
+                if (!resResponse.ok || !configResponse.ok || !settingsResponse.ok) {
                     console.error('Polling Error: Could not connect to the server.');
                     return; // Fail silently
                 }
 
                 const resResult = await resResponse.json();
                 const configResult = await configResponse.json();
+                const settingsResult = await settingsResponse.json();
 
                 if (resResult.success && configResult.success) {
                     allReservations = Array.isArray(resResult.data) ? resResult.data : [];
                     allTableConfigs = Array.isArray(configResult.data) ? configResult.data : [];
+                    
+                    if (settingsResult.success && settingsResult.data && settingsResult.data.booking_mode) {
+                        bookingMode = settingsResult.data.booking_mode;
+                    }
+
                     updateTableStatus();
                 } else {
                     console.error('Polling Error: Failed to load data.');
@@ -1096,19 +1279,26 @@
                 createTableLayout(layoutConfig); // Create layout first
 
                 // Perform the first fetch and show errors to the user
-                const [resResponse, configResponse] = await Promise.all([
+                const [resResponse, configResponse, settingsResponse] = await Promise.all([
                     fetch(API_GET_RESERVATIONS),
-                    fetch('api/get_table_status.php')
+                    fetch('api/get_table_status.php'),
+                    fetch('api/get_system_settings.php')
                 ]);
 
-                if (!resResponse.ok || !configResponse.ok) throw new Error('Could not connect to the server.');
+                if (!resResponse.ok || !configResponse.ok || !settingsResponse.ok) throw new Error('Could not connect to the server.');
 
                 const resResult = await resResponse.json();
                 const configResult = await configResponse.json();
+                const settingsResult = await settingsResponse.json();
 
                 if (resResult.success && configResult.success) {
                     allReservations = Array.isArray(resResult.data) ? resResult.data : [];
                     allTableConfigs = Array.isArray(configResult.data) ? configResult.data : [];
+                    
+                    if (settingsResult.success && settingsResult.data && settingsResult.data.booking_mode) {
+                        bookingMode = settingsResult.data.booking_mode;
+                    }
+
                     updateTableStatus();
 
                     // If initial load is successful, start polling
@@ -1177,6 +1367,105 @@
         window.onload = initialLoad;
         reservationForm.addEventListener('submit', submitReservationDetails);
         verifySlipBtn.addEventListener('click', handleSlipVerification);
+
+        // --- SEARCH LOGIC ---
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const clearSearchBtn = document.getElementById('clearSearch');
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim().toLowerCase();
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                clearSearchBtn.style.display = 'none';
+                return;
+            }
+
+            clearSearchBtn.style.display = 'block';
+            
+            const matches = allReservations.filter(res => {
+                const fullName = `${res.name} ${res.lastName}`.toLowerCase();
+                const phone = res.phone ? res.phone.toString() : '';
+                return fullName.includes(query) || phone.includes(query);
+            });
+
+            displaySearchResults(matches);
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            searchResults.style.display = 'none';
+            clearSearchBtn.style.display = 'none';
+            removeTableHighlight();
+        });
+
+        function displaySearchResults(matches) {
+            searchResults.innerHTML = '';
+            if (matches.length === 0) {
+                searchResults.innerHTML = '<div class="p-3 text-center text-muted">ไม่พบข้อมูลการจอง</div>';
+            } else {
+                matches.forEach(match => {
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.innerHTML = `
+                        <div class="search-result-info">
+                            <span class="search-result-name">${match.name} ${match.lastName}</span>
+                            <span class="search-result-phone">${maskPhone(match.phone)}</span>
+                        </div>
+                        <span class="search-result-table">โต๊ะ ${match.TableID}</span>
+                    `;
+                    div.onclick = () => {
+                        searchResults.style.display = 'none';
+                        scrollToTable(match.TableID);
+                    };
+                    searchResults.appendChild(div);
+                });
+            }
+            searchResults.style.display = 'block';
+        }
+
+        function maskPhone(phone) {
+            if (!phone) return '';
+            // Show only first 3 and last 3 digits
+            if (phone.length > 6) {
+                return phone.substring(0, 3) + 'xxxx' + phone.substring(phone.length - 3);
+            }
+            return phone;
+        }
+
+        function scrollToTable(tableId) {
+            const tableElement = document.getElementById(tableId);
+            if (tableElement) {
+                tableElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Add highlight
+                removeTableHighlight();
+                tableElement.classList.add('highlight-table');
+                
+                // Open info modal after a short delay
+                setTimeout(() => {
+                    openReservationForm(tableId);
+                }, 800);
+
+                // Remove highlight after 5 seconds
+                setTimeout(() => {
+                    tableElement.classList.remove('highlight-table');
+                }, 5000);
+            }
+        }
+
+        function removeTableHighlight() {
+            document.querySelectorAll('.highlight-table').forEach(el => {
+                el.classList.remove('highlight-table');
+            });
+        }
+
+        // Close search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
 
         slipUpload.addEventListener('change', async (event) => {
             const file = event.target.files[0];

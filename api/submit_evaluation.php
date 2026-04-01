@@ -6,11 +6,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $full_name = $conn->real_escape_string($_POST['full_name']);
     $phone = $conn->real_escape_string($_POST['phone']);
 
-    // Check if phone already exists to prevent duplicate entries for Lucky Draw
-    $checkSql = "SELECT id FROM tb_evaluations WHERE phone = '$phone'";
+    // Get current event year from settings
+    $res_year = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'current_event_year'");
+    $event_year = ($res_year && $res_year->num_rows > 0) ? (int)$res_year->fetch_assoc()['setting_value'] : 2025;
+
+    // Check if phone already exists in THIS YEAR to prevent duplicate entries for Lucky Draw
+    $checkSql = "SELECT id FROM tb_evaluations WHERE phone = '$phone' AND event_year = $event_year";
     $checkResult = $conn->query($checkSql);
     if ($checkResult && $checkResult->num_rows > 0) {
-        echo json_encode(['success' => false, 'message' => "ขออภัย เบอร์โทรศัพท์ $phone นี้ได้ใช้ทำแบบประเมินและลุ้นสิทธิ์รางวัลไปแล้ว ไม่สามารถทำซ้ำได้ครับ"]);
+        echo json_encode(['success' => false, 'message' => "ขออภัย เบอร์โทรศัพท์ $phone นี้ได้ใช้ทำแบบประเมินและลุ้นสิทธิ์รางวัลสของปี $event_year ไปแล้ว ไม่สามารถทำซ้ำได้ครับ"]);
         exit();
     }
 
@@ -47,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $comment_more = $conn->real_escape_string($_POST['comment_more'] ?? '');
 
     $sql = "INSERT INTO tb_evaluations (
-                full_name, phone, lucky_code, enroll_year, grad_level, gender, age_range, grad_school, user_status, user_status_other, occupation, occupation_other, info_source,
+                full_name, phone, lucky_code, event_year, enroll_year, grad_level, gender, age_range, grad_school, user_status, user_status_other, occupation, occupation_other, info_source,
                 q1_1, q1_2, q1_3, q1_4, q1_5,
                 q2_1, q2_2, q2_3, q2_4,
                 q3_1, q3_2, q3_3, q3_4,
@@ -56,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 q6_1, q6_2, q6_3,
                 comment_impress, comment_improve, comment_more
             ) VALUES (
-                '$full_name', '$phone', '$lucky_code', '$enroll_year', '$grad_level', '$gender', '$age_range', '$grad_school', '$user_status', '$user_status_other', '$occupation', '$occupation_other', '$info_source',
+                '$full_name', '$phone', '$lucky_code', $event_year, '$enroll_year', '$grad_level', '$gender', '$age_range', '$grad_school', '$user_status', '$user_status_other', '$occupation', '$occupation_other', '$info_source',
                 $q1_1, $q1_2, $q1_3, $q1_4, $q1_5,
                 $q2_1, $q2_2, $q2_3, $q2_4,
                 $q3_1, $q3_2, $q3_3, $q3_4,
