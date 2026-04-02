@@ -728,19 +728,22 @@
             <div class="legend-group d-flex gap-4">
                 <div class="d-flex align-items-center">
                     <div class="legend-dot available"></div>
-                    <span class="ms-2">ว่าง</span>
+                    <span class="ms-2" id="availableCountSpan">ว่าง</span>
                 </div>
                 <div class="d-flex align-items-center">
                     <div class="legend-dot pending"></div>
-                    <span class="ms-2">รอตรวจสอบ</span>
+                    <span class="ms-2" id="pendingCountSpan">รอตรวจสอบ</span>
                 </div>
                 <div class="d-flex align-items-center">
                     <div class="legend-dot reserved"></div>
-                    <span class="ms-2">จองแล้ว</span>
+                    <span class="ms-2" id="reservedCountSpan">จองแล้ว</span>
                 </div>
                 <div class="d-flex align-items-center">
                     <div class="legend-dot blocked"></div>
-                    <span class="ms-2">ปิดจอง</span>
+                    <span class="ms-2" id="blockedCountSpan">ปิดจอง</span>
+                </div>
+                <div class="d-flex align-items-center fw-bold text-primary ms-1">
+                    <span id="totalCountSpan">รวมทั้งหมด</span>
                 </div>
             </div>
 
@@ -1062,6 +1065,30 @@
                     }
                 }
             });
+
+            // Calculate and display counts
+            const allTableItems = Array.from(document.querySelectorAll('.table-item'));
+            const visibleTables = allTableItems.filter(t => !t.classList.contains('hidden'));
+            
+            const countBlocked = visibleTables.filter(t => t.classList.contains('blocked')).length;
+            const countReserved = visibleTables.filter(t => t.classList.contains('reserved')).length;
+            const countPending = visibleTables.filter(t => t.classList.contains('pending')).length;
+            const countAvailable = visibleTables.length - countBlocked - countReserved - countPending;
+
+            const elAvailable = document.getElementById('availableCountSpan');
+            if (elAvailable) elAvailable.textContent = `ว่าง (${countAvailable} โต๊ะ)`;
+            
+            const elPending = document.getElementById('pendingCountSpan');
+            if (elPending) elPending.textContent = `รอตรวจสอบ (${countPending} โต๊ะ)`;
+            
+            const elReserved = document.getElementById('reservedCountSpan');
+            if (elReserved) elReserved.textContent = `จองแล้ว (${countReserved} โต๊ะ)`;
+            
+            const elBlocked = document.getElementById('blockedCountSpan');
+            if (elBlocked) elBlocked.textContent = `ปิดจอง (${countBlocked} โต๊ะ)`;
+            
+            const elTotal = document.getElementById('totalCountSpan');
+            if (elTotal) elTotal.textContent = `รวมทั้งหมด (${visibleTables.length} โต๊ะ)`;
         }
 
         // 3. Open the reservation form or show info when a table is clicked
