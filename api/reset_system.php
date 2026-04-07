@@ -28,11 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt->close();
     } else if ($action === 'reset_all') {
-        // Reset bookings but just increment the lucky draw year to preserve historical data
+        // Just increment the lucky draw year and event year to preserve historical data
         $conn->begin_transaction();
         try {
-            $conn->query("DELETE FROM bookings");
-            
             $res_year = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'current_event_year'");
             $current_year = ($res_year && $res_year->num_rows > 0) ? (int)$res_year->fetch_assoc()['setting_value'] : 2025;
             $next_year = $current_year + 1;
@@ -40,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conn->query("UPDATE system_settings SET setting_value = '$next_year' WHERE setting_key = 'current_event_year'");
             
             $conn->commit();
-            echo json_encode(['success' => true, 'message' => "รีเซ็ตข้อมูลโต๊ะเรียบร้อยแล้ว และเปลี่ยนรอบจับรางวัลเป็นปี $next_year (เก็บข้อมูลการประเมินเก่าไว้)"]);
+            echo json_encode(['success' => true, 'message' => "เข้าสู่รอบกิจกรรมปี $next_year เรียบร้อยแล้ว (โต๊ะจะถูกปล่อยว่างตามปีใหม่ และเก็บข้อมูลเก่าไว้)"]);
         } catch (Exception $e) {
             $conn->rollback();
             echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()]);

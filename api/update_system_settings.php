@@ -10,27 +10,35 @@ if (!isset($_SESSION['admin_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $booking_mode = $_POST['booking_mode'] ?? 'open';
-
-    // Check if system_settings table exists (in case it didn't during manual creation)
+    // Check if system_settings table exists
     $sql_create = "CREATE TABLE IF NOT EXISTS system_settings (
         setting_key VARCHAR(50) PRIMARY KEY,
         setting_value VARCHAR(255) NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
     $conn->query($sql_create);
 
-    $stmt = $conn->prepare("INSERT INTO system_settings (setting_key, setting_value) 
-                            VALUES ('booking_mode', ?) 
-                            ON DUPLICATE KEY UPDATE setting_value = ?");
-    $stmt->bind_param("ss", $booking_mode, $booking_mode);
+    $success = true;
+    $message = 'ตั้งค่าระบบเรียบร้อยแล้ว';
 
-    if ($stmt->execute()) {
-        echo json_encode(['success' => true, 'message' => 'ตั้งค่าระบบเรียบร้อยแล้ว']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $conn->error]);
+    // Loop through all POST data and update settings
+    foreach ($_POST as $key => $value) {
+        $key = $conn->real_escape_string($key);
+        $value = $conn->real_escape_string($value);
+
+        $stmt = $conn->prepare("INSERT INTO system_settings (setting_key, setting_value) 
+                                VALUES (?, ?) 
+                                ON DUPLICATE KEY UPDATE setting_value = ?");
+        $stmt->bind_param("sss", $key, $value, $value);
+        
+        if (!$stmt->execute()) {
+            $success = false;
+            $message = 'เกิดข้อผิดพลาดในการอัปเดต ' . $key;
+            break;
+        }
+        $stmt->close();
     }
 
-    $stmt->close();
+    echo json_encode(['success' => $success, 'message' => $message]);
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
 }

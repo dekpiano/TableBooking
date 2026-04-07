@@ -10,10 +10,26 @@ if (!isset($_SESSION['admin_id'])) {
 
 $admin_name = $_SESSION['admin_name'];
 
-// Fetch all bookings to calculate stats and for the table
+// Get current event year from settings
+$res_year = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'current_event_year'");
+$current_event_year = ($res_year && $res_year->num_rows > 0) ? (int)$res_year->fetch_assoc()['setting_value'] : 2025;
+
+// Fetch unique years from bookings for filtering
+$years_res = $conn->query("SELECT DISTINCT event_year FROM bookings ORDER BY event_year DESC");
+$available_years = [];
+while($y = $years_res->fetch_assoc()) $available_years[] = $y['event_year'];
+if (!in_array($current_event_year, $available_years)) $available_years[] = $current_event_year;
+sort($available_years);
+$available_years = array_reverse($available_years);
+
+// Filter by year if requested
+$filter_year = isset($_GET['year']) ? (int)$_GET['year'] : $current_event_year;
+
+// Fetch all bookings for the filtered year
 $sql = "SELECT b.*, a.admin_name AS approver_name
         FROM bookings b
         LEFT JOIN tb_admins a ON b.approved_by_admin_id = a.admin_id
+        WHERE b.event_year = $filter_year
         ORDER BY b.created_at DESC";
 $result = $conn->query($sql);
 
@@ -263,12 +279,23 @@ if (isset($_SESSION['message'])) {
                     <button id="toggleModeBtn" class="btn btn-outline-primary btn-sm"><i class="bi bi-toggle-on"></i> โหมดการจอง</button>
                     <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#manageTableStatusModal"><i class="bi bi-slash-circle text-white"></i> จัดการสถานะโต๊ะ</button>
                     <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addBookingModal"><i class="bi bi-plus-circle-fill"></i> เพิ่มการจองใหม่</button>
+                    <button class="btn btn-dark btn-sm text-white" data-bs-toggle="modal" data-bs-target="#systemSettingsModal"><i class="bi bi-gear-fill"></i> ตั้งค่าระบบ</button>
                     <a href="logout.php" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i> ออกจากระบบ</a>
                 </div>
             </div>
 
-            <div class="admin-header mb-3">
+            <div class="admin-header mb-3 d-flex justify-content-between align-items-center">
                 <h2><i class="bi bi-speedometer2"></i> สรุปข้อมูล (Dashboard)</h2>
+                <div class="d-flex align-items-center bg-white p-2 rounded shadow-sm">
+                    <label class="me-2 fw-bold text-muted mb-0">เลือกปีแสดงผล:</label>
+                    <form action="" method="GET" class="m-0">
+                        <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <?php foreach($available_years as $y): ?>
+                                <option value="<?php echo $y; ?>" <?php echo $y == $filter_year ? 'selected' : ''; ?>>รอบกิจกรรมปี <?php echo $y; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                </div>
             </div>
 
             <!-- Dashboard Cards -->
@@ -478,7 +505,39 @@ if (isset($_SESSION['message'])) {
     </div>
 
     <!-- JQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- System Settings Modal -->
+    <div class="modal fade" id="systemSettingsModal" tabindex="-1" aria-labelledby="systemSettingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="systemSettingsModalLabel"><i class="bi bi-gear-fill"></i> ตั้งค่าระบบ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">ปีการศึกษา / ปีที่จัดกิจกรรมปัจจุบัน</label>
+                        <div class="input-group">
+                            <input type="number" id="currentYearInput" class="form-control" placeholder="เช่น 2026">
+                            <button class="btn btn-primary" onclick="updateCurrentYear()"><i class="bi bi-save"></i> บันทึกปี</button>
+                        </div>
+                        <small class="text-muted">ปีนี้จะถูกแสดงในแบบประเมินและใช้แยกกลุ่มข้อมูล Lucky Draw</small>
+                    </div>
+                    <hr>
+                    <div class="bg-light p-3 rounded border">
+                        <h6 class="text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> สำหรับเริ่มงานปีถัดไป (สำคัญมาก!)</h6>
+                        <p class="small text-muted mb-3">เมื่อกดปุ่มนี้ ระบบจะทำการ:
+                            <br>1. <b>ลบข้อมูลการจองโต๊ะทั้งหมด</b> เพื่อให้โต๊ะว่าง
+                            <br>2. <b>เพิ่มปีจัดกิจกรรมขึ้น 1 ปี</b> เพื่อเริ่มคัดกรอง Lucky Draw ใหม่
+                            <br>3. ข้อมูลการประเมินปีก่อนหน้าจะยังคงถูกเก็บไว้ในระบบ
+                        </p>
+                        <button class="btn btn-danger w-100" onclick="confirmStartNewYear()">
+                            <i class="bi bi-rocket-takeoff-fill"></i> ล้างข้อมูลและเริ่มปีใหม่ทันที
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- DataTables JS -->
@@ -521,6 +580,18 @@ if (isset($_SESSION['message'])) {
                 }
             });
 
+            // Display System Settings in Modal
+            const sysModal = document.getElementById('systemSettingsModal');
+            if (sysModal) {
+                sysModal.addEventListener('show.bs.modal', async function () {
+                    const response = await fetch('api/get_system_settings.php');
+                    const result = await response.json();
+                    if (result.success && result.data.current_event_year) {
+                        document.getElementById('currentYearInput').value = result.data.current_event_year;
+                    }
+                });
+            }
+
             // Display SweetAlert2 messages if they exist
             <?php if ($message): ?>
                 Swal.fire({
@@ -540,7 +611,80 @@ if (isset($_SESSION['message'])) {
                 const nextMode = currentMode === 'open' ? 'closed' : 'open';
                 updateSystemMode(nextMode);
             });
+
+            // Manage Table Status Modal
+            const manageTableStatusModal = document.getElementById('manageTableStatusModal');
+            if (manageTableStatusModal) {
+                manageTableStatusModal.addEventListener('show.bs.modal', async function () {
+                    await loadTableStatuses();
+                });
+            }
         });
+
+        async function updateCurrentYear() {
+            const newYear = document.getElementById('currentYearInput').value;
+            if (!newYear) return Swal.fire('คำเตือน', 'กรุณาระบุปีที่ต้องการ', 'warning');
+
+            const { isConfirmed } = await Swal.fire({
+                title: 'ยืนยันการเปลี่ยนปี?',
+                text: `ระบบจะเปลี่ยนการบันทึกข้อมูลเป็นปี ${newYear}`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ตกลง',
+                cancelButtonText: 'ยกเลิก'
+            });
+
+            if (isConfirmed) {
+                try {
+                    const formData = new FormData();
+                    formData.append('current_event_year', newYear);
+                    const response = await fetch('api/update_system_settings.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        Swal.fire('สำเร็จ!', 'อัปเดตปีจัดกิจกรรมเรียบร้อยแล้ว', 'success');
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    Swal.fire('เกิดข้อผิดพลาด', error.message, 'error');
+                }
+            }
+        }
+
+        async function confirmStartNewYear() {
+            const { isConfirmed } = await Swal.fire({
+                title: 'ยืนยันการเริ่มปีถัดไป?',
+                text: "ระบบจะเลื่อนรอบจัดกิจกรรม และปล่อยโต๊ะว่างสำหรับการจองปีใหม่ โดยจะยังเก็บข้อมูลเดิมไว้ในประวัติ!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, เริ่มปีใหม่!',
+                cancelButtonText: 'ยกเลิก'
+            });
+
+            if (isConfirmed) {
+                try {
+                    const formData = new FormData();
+                    formData.append('action', 'reset_all');
+                    const response = await fetch('api/reset_system.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        Swal.fire('สำเร็จ!', result.message, 'success').then(() => location.reload());
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    Swal.fire('เกิดข้อผิดพลาด', error.message, 'error');
+                }
+            }
+        }
 
         async function fetchSystemSettings() {
             try {

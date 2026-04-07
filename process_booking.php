@@ -44,9 +44,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // เตรียมและผูกพารามิเตอร์ (Added TableID)
-    $stmt = $conn->prepare("INSERT INTO bookings (name, email, phone, booking_date, booking_time, guests, message, TableID, slip_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssisss", $name, $email, $phone, $date, $time, $guests, $message, $tableID, $slip_path);
+    // Fetch current event year
+    $res_year = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'current_event_year'");
+    $current_year = ($res_year && $res_year->num_rows > 0) ? (int)$res_year->fetch_assoc()['setting_value'] : 2025;
+
+    // เตรียมและผูกพารามิเตอร์ (Added TableID and event_year)
+    $stmt = $conn->prepare("INSERT INTO bookings (name, email, phone, booking_date, booking_time, guests, message, TableID, slip_path, event_year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssisssi", $name, $email, $phone, $date, $time, $guests, $message, $tableID, $slip_path, $current_year);
 
     // รันคำสั่ง
     if ($stmt->execute()) {

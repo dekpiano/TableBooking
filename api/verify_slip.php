@@ -30,8 +30,12 @@ try {
             }
         }
 
-        // 2. ตรวจสอบว่ามีการจองที่อยู่ระหว่างรอดำเนินการหรือยืนยันแล้วหรือไม่
-        $checkBookingSql = "SELECT id FROM bookings WHERE TableID = '$tableId' AND (status = 'pending' OR status = 'verified')";
+        // Fetch current event year
+        $res_year = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'current_event_year'");
+        $current_year = ($res_year && $res_year->num_rows > 0) ? (int)$res_year->fetch_assoc()['setting_value'] : 2025;
+
+        // 2. ตรวจสอบว่ามีการจองที่อยู่ระหว่างรอดำเนินการหรือยืนยันแล้วหรือไม่ (กรองเฉพาะปีปัจจุบัน)
+        $checkBookingSql = "SELECT id FROM bookings WHERE TableID = '$tableId' AND (status = 'pending' OR status = 'verified') AND event_year = $current_year";
         $bookingResult = $conn->query($checkBookingSql);
         if ($bookingResult && $bookingResult->num_rows > 0) {
             echo json_encode(['success' => false, 'message' => 'ขออภัย โต๊ะนี้ถูกจองไปแล้ว หรือกำลังรอการตรวจสอบ.']);
@@ -98,8 +102,8 @@ try {
         }
 
         // เตรียมและผูกพารามิเตอร์
-        $stmt = $conn->prepare("INSERT INTO bookings (TableID, name, lastName, phone, batch, gradYear, payment_amount, transfer_date, transfer_time, slip_path, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')");
-        $stmt->bind_param("sssssissss", $tableId, $name, $lastName, $phone, $batch, $gradYear, $paymentAmount, $transferDate, $transferTime, $slip_path);
+        $stmt = $conn->prepare("INSERT INTO bookings (TableID, name, lastName, phone, batch, gradYear, payment_amount, transfer_date, transfer_time, slip_path, status, event_year) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
+        $stmt->bind_param("sssssissssi", $tableId, $name, $lastName, $phone, $batch, $gradYear, $paymentAmount, $transferDate, $transferTime, $slip_path, $current_year);
 
         // รันคำสั่ง
         if ($stmt->execute()) {

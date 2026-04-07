@@ -22,9 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
+    // Fetch current event year
+    $res_year = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'current_event_year'");
+    $current_year = ($res_year && $res_year->num_rows > 0) ? (int)$res_year->fetch_assoc()['setting_value'] : 2025;
+
     // Prepare and bind
-    $stmt = $conn->prepare("INSERT INTO bookings (name, lastName, phone, TableID, payment_amount, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())");
-    $stmt->bind_param("ssssd", $name, $lastName, $phone, $tableID, $payment_amount);
+    $stmt = $conn->prepare("INSERT INTO bookings (name, lastName, phone, TableID, payment_amount, status, created_at, event_year) VALUES (?, ?, ?, ?, ?, 'pending', NOW(), ?)");
+    $stmt->bind_param("ssssdi", $name, $lastName, $phone, $tableID, $payment_amount, $current_year);
 
     if ($stmt->execute()) {
         $_SESSION['message'] = ['type' => 'success', 'text' => 'เพิ่มการจองใหม่เรียบร้อยแล้ว!'];
